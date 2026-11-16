@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Mind Mastery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a study desk. One column of index cards on a cool paper ground, highlighter-yellow for the one thing to do next, bottom tab bar like a phone app. */
+:root{
+  --paper:#EEF1F5; --card:#FFFFFF; --ink:#131C33; --muted:#5B6680; --line:#D5DBE6;
+  --hi:#FFC533; --hi-ink:#2A1F00; --teal:#0B7A75; --teal-soft:#DDF1EF;
+  --good:#1B8A4B; --bad:#C23B32; --good-soft:#DFF3E7; --bad-soft:#F8E1DF;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Verdana",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#000000; --card:#111318; --ink:#F1F3F7; --muted:#9AA3B5; --line:#272B35;
+    --hi:#FFC533; --hi-ink:#2A1F00; --teal:#4FC9C2; --teal-soft:#0F2B2E;
+    --good:#5BD08C; --bad:#FF8177; --good-soft:#173A29; --bad-soft:#44201E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#000000; --card:#111318; --ink:#F1F3F7; --muted:#9AA3B5; --line:#272B35;
+  --hi:#FFC533; --hi-ink:#2A1F00; --teal:#4FC9C2; --teal-soft:#0F2B2E;
+  --good:#5BD08C; --bad:#FF8177; --good-soft:#173A29; --bad-soft:#44201E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+#app{display:flex;flex-direction:column;height:100%}
+header.top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+header.top h1{font-family:var(--display);font-size:20px;margin:0;font-weight:800;letter-spacing:-.01em;flex:1;text-wrap:balance}
+header.top .mark{background:var(--hi);color:var(--hi-ink);padding:0 6px;border-radius:4px}
+#back{display:none}
+main{flex:1;overflow-y:auto;padding:16px 16px 28px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+nav.tabs{display:flex;border-top:1px solid var(--line);background:var(--card)}
+nav.tabs button{flex:1;background:none;border:0;padding:9px 2px 10px;font:inherit;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-top:3px solid transparent}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--ink);border-top-color:var(--hi);font-weight:700}
+h2{font-family:var(--display);font-size:24px;line-height:1.15;margin:4px 0 0;font-weight:800;text-wrap:balance}
+h3{font-family:var(--display);font-size:17px;margin:0;font-weight:700;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.card.next{border-left:6px solid var(--hi)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.grid.two{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+button,.btn{font:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;min-height:44px}
+.btn.primary{background:var(--hi);border-color:var(--hi);color:var(--hi-ink)}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:var(--card)}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.tile{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--ink);min-height:96px}
+.tile:hover{border-color:var(--ink)}
+.tile b{font-family:var(--display);font-size:16px}
+.tile .small{color:var(--muted)}
+.tile>.pill,.card>.pill{align-self:flex-start}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--teal-soft);color:var(--teal);white-space:nowrap}
+.pill.done{background:var(--good-soft);color:var(--good)}
+.pill.hi{background:var(--hi);color:var(--hi-ink)}
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;color:var(--ink);cursor:pointer;width:100%}
+.item:last-child{border-bottom:0}
+.item .n{font-family:var(--mono);font-size:13px;color:var(--muted);width:26px;flex:none;font-variant-numeric:tabular-nums}
+.item .t{flex:1}
+.check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:13px}
+.check.on{background:var(--good);border-color:var(--good);color:var(--card)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--teal);border-radius:99px}
+ol.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.lesson p{max-width:65ch}
+.callout{background:var(--teal-soft);border-radius:10px;padding:12px 14px}
+.callout.hi{background:var(--hi);color:var(--hi-ink)}
+.stat{display:flex;flex-direction:column;gap:0}
+.stat b{font-family:var(--display);font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+input[type=text],input[type=number],textarea,select{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:44px}
+textarea{min-height:120px;resize:vertical}
+label{font-weight:700;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(34px,11vw,64px);line-height:1.1;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em;overflow-wrap:anywhere}
+.stage{min-height:170px;display:grid;place-items:center;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.timer{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:15px;padding:5px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card)}
+.chip.ok{background:var(--good-soft);border-color:var(--good);color:var(--ink)}
+.chip.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
+.schulte{display:grid;gap:5px;width:min(100%,420px);margin:0 auto}
+.schulte button{aspect-ratio:1;font-family:var(--display);font-weight:800;font-size:clamp(16px,5.5vw,26px);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;cursor:pointer;padding:0}
+.schulte button.hit{background:var(--good-soft);color:var(--muted)}
+.schulte button.miss{background:var(--bad-soft)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:320px;margin:0 auto;width:100%}
+.keypad button{min-height:52px;font-family:var(--display);font-size:22px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;cursor:pointer}
+.keypad button.go{background:var(--hi);border-color:var(--hi);color:var(--hi-ink)}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.pc{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:8px 0;text-align:center;font-family:var(--display);font-weight:800;font-size:18px;cursor:pointer;color:var(--ink)}
+.pc.red{color:var(--bad)} .pc.used{opacity:.3}
+.faces{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.face{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.face svg{width:96px;height:96px}
+.reader{font-size:19px;line-height:1.75;max-width:62ch;margin:0 auto}
+.reader mark{background:var(--hi);color:var(--hi-ink);border-radius:3px;padding:0 1px}
+.rsvp{font-family:var(--display);font-weight:700;font-size:clamp(26px,8vw,44px);min-height:130px;display:grid;place-items:center;text-align:center}
+.spark{width:100%;height:60px;display:block}
+.spark path.l{fill:none;stroke:var(--teal);stroke-width:2}
+.spark path.a{fill:var(--teal-soft);stroke:none}
+.spark circle{fill:var(--hi);stroke:var(--ink);stroke-width:1}
+.flip{min-height:150px;display:grid;place-items:center;text-align:center;font-size:19px;padding:20px}
+.src{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--line)}
+.src:last-child{border-bottom:0}
+.week{display:flex;gap:4px;flex-wrap:wrap}
+.dot{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-family:var(--mono);color:var(--muted)}
+.dot.on{background:var(--good);border-color:var(--good);color:var(--card)}
+.dot.now{border:2px solid var(--hi);color:var(--ink)}
+details summary{cursor:pointer;font-weight:700}
+table{border-collapse:collapse;width:100%}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+.scroll-x{overflow-x:auto}
+@media (prefers-reduced-motion:no-preference){.tile,.btn{transition:border-color .12s,transform .12s}.btn:active{transform:scale(.98)}}
+
+</style>
+</head>
+<body>
+<div id="app">
+<header class="top"><button class="btn sm ghost" id="back" aria-label="Back">← Back</button><h1 id="title">Mind <span class="mark">Mastery</span></h1></header>
+<main></main>
+<nav class="tabs" aria-label="Sections"></nav>
+</div>
+<script>
+window.STANDALONE = true;
+'use strict';
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  if (props) for (const k in props) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'html') n.innerHTML = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'value') n.value = v;
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(9)) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+}
+const rnd = n => Math.floor(Math.random() * n);
+const ri = (a, b) => a + rnd(b - a + 1);
+const pick = a => a[rnd(a.length)];
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const sample = (a, n) => shuffle(a).slice(0, n);
+const today = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const fmtT = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const norm = s => String(s || '').trim().toLowerCase().replace(/[^a-z0-9à-ÿ ]/g, '');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- state ---------- */
+const KEY = 'mindmastery.v1';
+function defState() {
+  return {
+    done: {}, log: [], cards: {}, palaces: [{ name: 'Example: a flat', loci: ['Front door', 'Coat hooks', 'Sofa', 'Television', 'Dining table', 'Fridge', 'Kitchen sink', 'Bathroom mirror', 'Bed', 'Desk'] }],
+    pegs: {}, days: {}, prog: { on: false, start: null }, set: { code: 'major', theme: 'dark' }, notes: {}
+  };
+}
+let S = (function () { try { const r = localStorage.getItem(KEY); if (r) return Object.assign(defState(), JSON.parse(r)); } catch (e) { } return defState(); })();
+let storageOK = true;
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; } }
+function touchDay() { const d = today(); S.days[d] = (S.days[d] || 0) + 1; }
+function streak() {
+  let n = 0; const d = new Date();
+  if (!S.days[today(d)]) d.setDate(d.getDate() - 1);
+  while (S.days[today(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function logScore(id, score, extra) { S.log.push({ d: id, t: Date.now(), s: score, x: extra || '' }); if (S.log.length > 4000) S.log.splice(0, S.log.length - 4000); touchDay(); save(); }
+function scoresFor(id) { return S.log.filter(l => l.d === id); }
+function bestFor(id, higher = true) { const a = scoresFor(id).map(l => l.s); if (!a.length) return null; return higher ? Math.max(...a) : Math.min(...a); }
+function applyTheme() { document.documentElement.setAttribute('data-theme', S.set.theme === 'light' ? 'light' : 'dark'); }
+
+/* ---------- navigation ---------- */
+const TABS = [
+  ['today', 'Today', '<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>'],
+  ['learn', 'Learn', '<path d="M4 5h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v13h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4z"/><path d="M12 6v13"/>'],
+  ['train', 'Train', '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'],
+  ['review', 'Review', '<rect x="4" y="6" width="13" height="13" rx="2"/><path d="M8 3h11a1 1 0 0 1 1 1v11"/>'],
+  ['more', 'More', '<path d="M4 19V10M10 19V5M16 19v-7M21 19H3"/>']
+];
+let stack = [], cleanups = [], curTab = 'today';
+function onLeave(fn) { cleanups.push(fn); }
+function runCleanups() { cleanups.forEach(f => { try { f(); } catch (e) { } }); cleanups = []; }
+function render() {
+  runCleanups();
+  const top = stack[stack.length - 1];
+  $('#title').innerHTML = stack.length > 1 ? esc(top.title) : 'Mind <span class="mark">Mastery</span>';
+  $('#back').style.display = stack.length > 1 ? 'inline-flex' : 'none';
+  const main = $('main'); main.innerHTML = ''; const w = el('div', { class: 'wrap' }); main.append(w); top.fn(w); main.scrollTop = 0;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.dataset.tab === curTab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+}
+function go(fn, title) { stack.push({ fn, title }); render(); }
+function back() { if (stack.length > 1) { stack.pop(); render(); } }
+function tab(id, silent) { curTab = id; stack = [{ fn: VIEWS[id], title: '' }]; if (!silent) { try { if (location.hash !== '#' + id) location.hash = id; } catch (e) { } } render(); }
+function timerEvery(ms, fn) { const i = setInterval(fn, ms); onLeave(() => clearInterval(i)); return () => clearInterval(i); }
+function after(ms, fn) { const i = setTimeout(fn, ms); onLeave(() => clearTimeout(i)); return () => clearTimeout(i); }
+
+/* ---------- small UI pieces ---------- */
+function progressBar(frac) { return el('div', { class: 'bar' }, el('i', { style: 'width:' + Math.round(100 * Math.min(1, frac)) + '%' })); }
+function spark(vals) {
+  if (vals.length < 2) return null;
+  const W = 300, H = 60, mn = Math.min(...vals), mx = Math.max(...vals), sp = (mx - mn) || 1;
+  const pts = vals.map((v, i) => [4 + i * (W - 8) / (vals.length - 1), H - 6 - (v - mn) / sp * (H - 14)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const last = pts[pts.length - 1];
+  const s = el('div', { html: `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Score trend"><path class="a" d="${d} L${last[0]} ${H} L4 ${H} Z"/><path class="l" d="${d}"/><circle cx="${last[0]}" cy="${last[1]}" r="3.5"/></svg>` });
+  return s.firstChild;
+}
+function select(id, label, opts, val, onchange) {
+  const s = el('select', { id, onchange: e => onchange && onchange(e.target.value) }, opts.map(o => { const [v, t] = Array.isArray(o) ? o : [o, o]; const op = el('option', { value: v }, t); if (String(v) === String(val)) op.selected = true; return op; }));
+  return el('label', { for: id }, label, s);
+}
+function resultCard(drill, id, score, unitText, lines, again) {
+  const prevBest = (function () { const a = scoresFor(id).slice(0, -1).map(l => l.s); return a.length ? (drill.higher === false ? Math.min(...a) : Math.max(...a)) : null; })();
+  const isBest = prevBest == null || (drill.higher === false ? score < prevBest : score > prevBest);
+  return el('div', { class: 'card next' },
+    el('div', { class: 'row between' }, el('h3', null, 'Result'), isBest && scoresFor(id).length > 1 ? el('span', { class: 'pill hi' }, 'New personal best') : null),
+    el('div', { class: 'stat' }, el('b', null, unitText), prevBest != null ? el('span', { class: 'muted small' }, 'Previous best: ' + drill.fmt(prevBest)) : el('span', { class: 'muted small' }, 'First score recorded')),
+    lines,
+    el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: again }, 'Go again'), el('button', { class: 'btn', onclick: back }, 'Done')));
+}
+
+'use strict';
+const LESSONS = [];
+const L = (id, t, title, src, why, how, ex, doit, drill, dopt, q, a) => LESSONS.push({ id, t, title, src, why, how, ex, do: doit, drill, dopt, q, a });
+
+/* ============ LEARNING FOUNDATIONS ============ */
+L('f1', 'foundations', 'FAST: four switches for learning anything', ['kwik-sb'],
+  'Most slow learning comes from four avoidable habits: thinking you already know it, sitting passively, being in a flat mood, and learning only for yourself. Jim Kwik packs the fixes into one word, FAST.',
+  ['<b>Forget.</b> Set aside what you think you know, anything that is not urgent, and your beliefs about your limits. Park stray thoughts on paper rather than fighting them.',
+    '<b>Active.</b> Learning is not a spectator sport. Take notes, answer the questions out loud, do the exercise.',
+    '<b>State.</b> Information combined with emotion becomes a long-term memory. Sit up, breathe, get curious on purpose before you start.',
+    '<b>Teach.</b> Learn as if you must explain it to someone tomorrow. You will pay closer attention and organise it better.'],
+  null, 'Pick one thing you want to learn this month. Before your next session, write one line for each letter: what you will set aside, how you will stay active, the state you will bring, and who you will teach.', 'focus', null,
+  'What do the letters in FAST stand for?', 'Forget (what you know, distractions, limits), Active, State, Teach.');
+
+L('f2', 'foundations', 'MOM: why you forget, and the fix', ['kwik-sb'],
+  'There is no good or bad memory, only a trained or an untrained one. When you forget something, one of three things was missing, and Kwik\'s MOM gives you a checklist for which.',
+  ['<b>Motivation.</b> Ask why this is worth remembering. A reason turns attention on; without one the brain discards the input.',
+    '<b>Observation.</b> Most "forgetting" is never having noticed in the first place. Be present and really listen or look.',
+    '<b>Mechanics.</b> The step-by-step techniques in this app: pictures, links, pegs and places.'],
+  'You forget a name seconds after hearing it. That is usually an observation failure: you were thinking about what to say next.',
+  'Next time you meet someone or read a page, run the check in order: Why do I care? Am I actually paying attention? Which technique am I using?', 'names', { n: 4 },
+  'In MOM, what do the three letters stand for?', 'Motivation, Observation, Mechanics.');
+
+L('f3', 'foundations', 'Kill the ANTs: beliefs that cap your learning', ['kwik-sb', 'alb'],
+  'Your self-talk works like a program. Tell yourself "I am terrible with names" and you stop trying to remember them. Kwik calls these Automatic Negative Thoughts; the Accelerated Learning Blueprint covers the same ground as growth mindset.',
+  ['Catch the sentence. Notice each "I can\'t", "I\'m not a maths person", "I always forget".',
+    'Add one word: <i>yet</i>. "I do not have a good memory for numbers yet."',
+    'Replace it with evidence. Use the drills here: a first score and a better score a week later is proof the skill is trainable.',
+    'Tidy your surroundings too. A clear desk and a phone in another room remove a steady source of distraction.'],
+  null, 'Write down the one belief about your memory or learning you repeat most often. Rewrite it with "yet", then run any drill twice and note both scores.', 'chain', { n: 10 },
+  'What is an ANT, in Kwik\'s terms?', 'An Automatic Negative Thought: limiting self-talk that becomes self-fulfilling.');
+
+L('f4', 'foundations', 'The ten keys to a better brain', ['kwik-sb'],
+  'Technique sits on top of biology. Kwik lists ten lifestyle keys; no memory method makes up for neglecting them. (He also memorises this list forwards and backwards in the course as a demonstration.)',
+  ['A good brain diet.', 'Killing ANTs (automatic negative thoughts).', 'Exercise: as your body moves, your brain grooves.', 'Brain nutrients; he suggests testing for gaps rather than guessing.', 'A positive peer group.', 'A clean environment.', 'Sleep.', 'Brain protection (wear the helmet).', 'New learning, every day.', 'Stress management.'],
+  null, 'Score yourself 1–10 on each key. Circle the lowest. Choose one small action for it this week. Then memorise the ten keys using the Body List lesson.', 'pegs', { list: 'body' },
+  'Name five of Kwik\'s ten brain keys.', 'Brain diet, killing ANTs, exercise, brain nutrients, positive peer group, clean environment, sleep, brain protection, new learning, stress management.');
+
+L('f5', 'foundations', 'Sleep, naps and stress', ['kwik-sb', 'alb'],
+  'Memories are consolidated during sleep. Studying and then sleeping badly is like training hard and skipping the meal afterwards: you throw away much of the gain.',
+  ['Protect the night after a learning day. Keep a regular bedtime and a dark, cool room.', 'Do a short review of the day\'s key points in the evening; let sleep do the filing.', 'If you are fading in the afternoon, a short nap of 10–20 minutes restores alertness without grogginess.', 'Lower stress before you study: slow breathing for a minute, a short walk, or the attention exercises in this section.'],
+  null, 'Tonight, spend three minutes before bed recalling (not rereading) the main points of what you learned today.', 'focus', null,
+  'Why does sleep matter for learning?', 'Consolidation into long-term memory happens during sleep; poor sleep after study wastes much of the session.');
+
+L('f6', 'foundations', 'A morning routine that primes the brain', ['kwik-sb'],
+  'Win the first hour and the day follows. In Superbrain, Kwik walks through the morning habits he uses to jump-start his brain, so that good choices do not depend on willpower.',
+  ['Recall your dreams for a moment before you get up.', 'Make your bed: a clean environment and a first small win.', 'Drink a large glass of water. The brain is mostly water.', 'Brush your teeth with the opposite hand to give the brain something new.', 'Do a few minutes of deep breathing. The brain is about 2% of body weight and uses about 20% of its oxygen.', 'Have a tea or drink you like, and journal while you drink it: plans for the day and what you are grateful for.', 'Then a few minutes of brisk exercise, a brain-food smoothie, and 20–30 minutes of reading.', 'Choose a few of these and run them in the same order every day until the sequence is automatic.'],
+  null, 'Write a five-step morning routine from this list that takes under 30 minutes. Run it for seven days before changing anything.', null, null,
+  'Name three habits from Kwik\'s morning routine.', 'Recall dreams, make the bed, drink water, brush teeth with the opposite hand, deep breathing, tea and journaling with gratitude.');
+
+L('f7', 'foundations', 'Four rules of neuroplasticity', ['alb'],
+  'The brain changes physically in response to demand, much as a muscle does. The Accelerated Learning Blueprint reduces the conditions for that change to four rules.',
+  ['<b>Motivation.</b> You need a real want, or a real discomfort to move away from. That tension signals the brain that change is needed.', '<b>Chunk.</b> Slice both the material and the time into small pieces.', '<b>Make errors.</b> Practise at the edge where you fail often. Errors are the trigger for change, not a sign it is not working.', '<b>Repeat.</b> Come back the next day and the day after. Once is not enough.'],
+  'Ten historical dates: split them into groups of three or four, test yourself, get some wrong, and repeat tomorrow.',
+  'Choose a drill here that you find hard. Set it one notch above comfortable so you miss about a third. That is the right difficulty.', 'numrun', { n: 10, sec: 4 },
+  'Why are errors useful during practice?', 'Failing at the edge of your ability is what signals the brain to change; it is the trigger for neuroplasticity.');
+
+L('f8', 'foundations', 'Work in sprints: Pomodoro and active breaks', ['alb', 'kwik-sb'],
+  'Attention fades in a predictable curve. Short timed blocks keep you in the high part of it, and you remember the start and end of a session best, so more sessions mean more starts and ends.',
+  ['Set a timer for 25 minutes and work on one thing only.', 'Take a 5-minute break. Stand up and move: a short walk, stretches, juggling, or cross-body movements. Do not open social media.', 'After four blocks, take a longer break.', 'Do the hardest task first, while your energy is highest ("eat the frog").'],
+  null, 'Run one Focus Session now with a written question, then take an active break.', 'focus', null,
+  'What should a break between study blocks contain?', 'Movement away from the screen, not more input: walk, stretch, juggle, breathe.');
+
+L('f9', 'foundations', 'Capture and create: notes that make you think', ['kwik-sb'],
+  'Copying down what you hear is transcription, not learning. Kwik\'s method splits the page so that half of your note-taking is thinking.',
+  ['Draw a vertical line down the page. Handwrite if you can: you cannot write everything, so you are forced to choose what matters.', 'Left side: <b>capture</b>. Key ideas, how-tos, facts.', 'Right side: <b>create</b>. Your questions, how you will use it, what it reminds you of, who you will teach it to.', 'Afterwards, review the right side first. It holds the part that is yours.'],
+  null, 'Take capture/create notes on the next lesson you open in this app, on paper.', null, null,
+  'What goes on the right-hand side of a capture/create page?', 'What you create: questions, applications, connections and how you would teach it.');
+
+L('f10', 'foundations', 'The forgetting curve and spaced review', ['kwik-sb', 'mm', 'gms', 'alb'],
+  'Without review, most new material fades within days. Cramming feels productive but produces short-lived memories. Reviews spread over time are what move information into long-term memory.',
+  ['Test yourself soon after learning: the same day.', 'Review again after a day, then after a few days, a week, a month. Each successful recall earns a longer gap.', 'Review by recalling from memory, not rereading. In the GMS method you first do a full test recall and fix mistakes, then repeat mentally.', 'Let the Review tab schedule this for you. Each lesson you complete adds a card.'],
+  null, 'Open Review and add one ready-made deck. Do today\'s cards. Come back tomorrow: that return is the technique.', null, null,
+  'Why is cramming a poor strategy?', 'Massed study gives short-lived memories; spaced recall over days is what builds long-term retention.');
+
+L('f11', 'foundations', 'Training attention', ['gms', 'kwik-sb'],
+  'Attention is like the hand of a clock: it points at one thing at a time and tends to drift. The School of Phenomenal Memory uses short "psycho-technical" exercises to learn to move it on purpose.',
+  ['<b>Fingers.</b> Interlock your hands, close your eyes and circle your thumbs around each other without touching, for 1–2 minutes. The sensation holds your attention and thoughts quieten.', '<b>Breathing.</b> Watch your breath without changing its rhythm. If it speeds up or slows down, you are controlling it, not observing it.', '<b>One object.</b> Hold a simple object in your mind\'s eye. Rotate it, enlarge it, shrink it.', 'Use one of these for a minute before any memorisation session.'],
+  null, 'Do the finger exercise for 90 seconds, then run a Schulte table and compare your time with a cold start.', 'schulte', null,
+  'In the breathing exercise, what shows you are doing it wrong?', 'Your breathing rhythm changes. You should observe it without controlling it.');
+
+L('f12', 'foundations', 'Beating procrastination', ['kwik-sb', 'alb', 'sy'],
+  'Putting learning off is rarely about time. It is usually that the task is too large or too vague to start.',
+  ['Shrink it. Ask what the smallest possible step is: one page, one drill, five minutes.', 'Start with the hardest thing while you are fresh.', 'Attach the session to something you already do every day, at the same time and place.', 'Use weekly and daily goals: decide the week\'s list once, then each morning pick the day\'s items and stop when they are done.', 'Be kind about slips. Missing one day is nothing; the rule is never to miss two.'],
+  null, 'Decide your fixed daily time for this app and the trigger it follows (after coffee, on the tram). Do one five-minute drill right now to start the chain.', 'math', { cat: 'add2' },
+  'What is the first move when you keep putting a task off?', 'Shrink it to the smallest step you can start immediately.');
+
+/* ============ MEMORY TECHNIQUES ============ */
+L('m1', 'memory', 'Turn it into a picture', ['kwik-sb', 'gms'],
+  'We remember what we see far better than what we hear or read. Kwik\'s "ultimate memory TIP" is Turn Into Picture. The GMS method is built on the same fact: the brain stores connections between images.',
+  ['For anything you want to keep, ask: what does this look like?', 'Make the image large, three-dimensional, detailed and in colour. A vague or flat picture does not hold.', 'Use one specific object, not a category: not "a dog" but a particular wet labrador.', 'Abstract word? Use a symbol (justice = scales) or a sound-alike (see the keyword lesson).'],
+  'Shopping list item "honey": see a heavy glass jar, amber, sticky, the lid half off, a slow drip down the side.',
+  'Take the first five words in a Chain Link list and spend five seconds on each, building the image in full detail before you link anything.', 'chain', { n: 10 },
+  'What does TIP stand for?', 'Turn Into Picture.');
+
+L('m2', 'memory', 'Connect two images at a time', ['gms', 'kwik-sb'],
+  'A memory is a connection. In the GMS model you never memorise an item on its own; you join two images and the brain records the join. Do it properly once and one image later recalls the other.',
+  ['Take exactly two images. Never try to link three at once.', 'Make them similar in size and put them in contact: one on, in, or piercing the other.', 'Hold the combined picture clearly for a few seconds. In GMS training the standard is about six seconds per connection.', 'Add action, exaggeration and feeling, as Kwik teaches: the stranger and more vivid, the stickier.', 'Then move on. Do not go back over it during memorising.'],
+  'Candle + bicycle: a huge lit candle jammed through the front wheel, wax splattering as the wheel turns.',
+  'Run Number Run at 8 seconds with 10 numbers and concentrate only on making each connection clean.', 'numrun', { n: 10, sec: 8 },
+  'How many images do you connect at once?', 'Two. Always link in pairs.');
+
+L('m3', 'memory', 'Chain linking: lists forwards and backwards', ['kwik-sb', 'gms', 'sy'],
+  'Linking each item to the next lets you hold a long list in order after one pass. Kwik uses it to have students recall ten random words forwards and backwards on the first try.',
+  ['Picture item 1 vividly.', 'Link item 1 to item 2 with an action picture. Then forget item 1 and link 2 to 3, and so on.', 'To recall, start at the first image and ask what it was doing; each image hands you the next.', 'To recall backwards, start from the last and follow the links the other way.', 'Weakness: one broken link loses what follows. For long or important lists use pegs or a palace.'],
+  'Fire hydrant → balloon → battery: a hydrant spraying out balloons; a balloon that bursts and batteries rain down.',
+  'Do Chain Link with 10 words. When you score 10, move to 15, then 20.', 'chain', { n: 10 },
+  'What is the main weakness of a chain?', 'If one link fails you can lose everything after it; there is no direct access to item 7.');
+
+L('m4', 'memory', 'The Russian Doll method', ['gms'],
+  'A GMS alternative to the chain that keeps a sequence compact. Each new image is placed on a part of the previous one, at a much smaller scale, like nested dolls.',
+  ['See the first image large.', 'Zoom in on one part of it and attach the second image there, small.', 'Now enlarge the second image until it fills your view, pick a part of it, and attach the third.', 'To recall, zoom in step by step.'],
+  'Guitar → key → snail: a tiny key hanging from a tuning peg of the guitar; zoom into the key, and a tiny snail sits on its teeth.',
+  'Memorise a 10-word list using only this method and compare your score with the chain.', 'chain', { n: 10 },
+  'How does the Russian Doll method differ from a chain?', 'Each next image is attached, much smaller, to a part of the previous image, and you zoom in to move along.');
+
+L('m5', 'memory', 'The Sun List: ten instant pegs', ['kwik-sb'],
+  'A peg is a hook that is always in the same place. Kwik\'s first peg list uses things that naturally come in that number, so it takes minutes to learn.',
+  ['Learn the list: 1 sun, 2 socks, 3 traffic light, 4 car doors, 5 star, 6 six-pack of soda, 7 rainbow, 8 octopus, 9 cat, 10 toes.', 'To store ten items, link item 1 to the sun, item 2 to the socks, and so on.', 'To recall item 7, think "rainbow" and see what is on it.', 'You can now answer in any order, which a chain cannot do.'],
+  null, 'Learn the Sun List in the Peg Lists drill, quiz yourself, then hang ten random items on it.', 'pegs', { list: 'sun' },
+  'In the Sun List, what are 3, 6 and 8?', 'Traffic light, six-pack of soda, octopus.');
+
+L('m6', 'memory', 'The Body List: pegs you carry with you', ['kwik-sb'],
+  'Your body gives you ten places in a fixed order, top to bottom. Kwik uses it to memorise ten brain foods and shopping lists; it works for any ten points.',
+  ['Touch each place as you say it: 1 top of head, 2 nose, 3 mouth, 4 ears, 5 larynx (throat), 6 shoulders, 7 collar, 8 fingers, 9 belly, 10 seat.', 'Put one image on each place and feel it there: blueberries stuffed up your nose, broccoli growing out of your ears.', 'Recall by walking down the body.', 'Touching the place while imagining adds a physical cue to the visual one.'],
+  null, 'Use the Body List to memorise the ten brain keys from Learning Foundations, then test yourself in the drill.', 'pegs', { list: 'body' },
+  'What are places 5, 7 and 10 on the Body List?', 'Larynx (throat), collar, seat.');
+
+L('m7', 'memory', 'Peg systems: storing by number', ['kwik-sb', 'mm', 'sy'],
+  'Any fixed, numbered set of images can serve as pegs: rhymes (one-bun, two-shoe), shapes, the alphabet, or the 100 number images you will build later. Scott Young notes that pegs suit ordered facts that have little internal logic.',
+  ['Choose a peg set and overlearn it until each number gives its image instantly.', 'Link each item to its peg with a two-image connection.', 'Reuse pegs for short-term lists; old images fade within a day or two. For permanent knowledge use a dedicated route.', 'Longer lists: combine sets (Sun List 1–10, Body List 11–20) or use the 00–99 number images.'],
+  null, 'Learn the rhyme pegs and compare how they feel against the Sun List.', 'pegs', { list: 'rhyme' },
+  'When are pegs better than a chain?', 'When you need direct access by number, or the items have no natural order or logic of their own.');
+
+L('m8', 'memory', 'The location method (memory palace)', ['kwik-sb', 'gms', 'sy', 'gms-cards'],
+  'The oldest and strongest technique. GMS calls it the Cicero method; Kwik calls it the location method. You already remember places effortlessly, so you borrow them as storage.',
+  ['Choose a place you know well and fix a route through it in one direction.', 'Pick distinct stops along the route: door, coat hooks, sofa. About ten per room.', 'Walk the route in your mind until the stops come without effort.', 'Place one image at each stop, interacting with it.', 'To recall, walk the route and look at each stop.'],
+  'Speech point 1, "costs": a mountain of coins blocking your front door. Point 2, "the team": your colleagues hanging from the coat hooks.',
+  'Open Memory Palace, enter a real route of ten stops from your own home, and practise storing ten words on it.', 'palace', null,
+  'What are the two things a memory palace needs before you can use it?', 'A fixed route direction and a set of distinct stops you can recall effortlessly.');
+
+L('m9', 'memory', 'Building a large system of support images', ['gms'],
+  'Serious memorising needs hundreds of storage places. The GMS approach multiplies a small number of routes into a large, numbered system.',
+  ['Start with routes (the Cicero method): ten objects in each of several rooms or streets.', 'On each object, single out five parts in a fixed order, for example left to right or top to bottom. One chair gives five stops: back, armrest, seat, leg, wheel.', 'Number the result. Ten objects × five parts = 50 places from one room.', 'Fix the system with mental walk-throughs until any place comes instantly, then use it only for storage.', 'Keep separate systems for practice and for knowledge you want to keep for good.'],
+  null, 'Take the route you built in the last lesson. For the first four stops, name five parts each and add them as a new 20-stop route.', 'palace', null,
+  'How does GMS turn one object into five storage places?', 'By singling out five parts of the object in a fixed order and using each part as its own support image.');
+
+L('m10', 'memory', 'Names: BE SUAVE', ['kwik-sb'],
+  'Forgetting names is mostly an attention problem. Kwik\'s BE SUAVE is a routine for the first thirty seconds of meeting someone.',
+  ['<b>Believe</b> you can. Drop "I am bad with names".', '<b>Exercise</b>: it takes practice.', '<b>Say</b> the name back at once: "Ted, good to meet you." You catch mishearings immediately.', '<b>Use</b> it a few times in conversation, not in every sentence.', '<b>Ask</b> about it: spelling, origin, who they were named after.', '<b>Visualise</b> it: turn the name into a picture.', '<b>End</b> with the name when you say goodbye.'],
+  null, 'Use Say, Use and End on the next three people you speak to today, even ones you know. Then train the Visualise step in the drill.', 'names', { n: 6 },
+  'In BE SUAVE, what are the S, U and A?', 'Say the name, Use the name, Ask about the name.');
+
+L('m11', 'memory', 'Names to faces: PIE, the forehead trick and distinctive features', ['kwik-sb', 'gms'],
+  'To keep a name attached to a person you need a hook on the person. Kwik\'s PIE does it in three moves; GMS trains the same skill as "singling out a distinctive feature".',
+  ['<b>Place.</b> Pick the first feature that stands out to you: eyebrows, glasses, a beard, hair. In GMS terms, the distinctive feature.', '<b>Imagine.</b> Turn the name into a picture. Mike = microphone; Rosa = a rose; Baker = a loaf.', '<b>Entwine.</b> Join the picture to the feature: a microphone tangled in his beard.', 'Quick alternative, credited to Franklin D. Roosevelt: imagine the name written across the person\'s forehead.', 'Avoid features that change, such as clothing, for people you will meet again.'],
+  null, 'Run Names & Faces with 6 people, using PIE on every face. Move to 9 when you get them all.', 'names', { n: 6 },
+  'What does PIE stand for?', 'Place, Imagine, Entwine.');
+
+L('m12', 'memory', 'Keyword substitution', ['kwik-sb', 'gms', 'sy'],
+  'Abstract or unfamiliar words do not make pictures by themselves. Substitute a familiar word that sounds similar and picture that. GMS calls this encoding by consonance; it is the engine behind vocabulary, names and technical terms.',
+  ['Say the word aloud and listen for a familiar sound inside it.', 'Picture the sound-alike, not the original word.', 'Link that picture to an image of the meaning.', 'Recall runs: hear the word → sound-alike image → linked meaning.'],
+  '"Mitochondria" → "mighty con dryer": a muscular conman holding a hairdryer that powers a whole city (the cell\'s power plant).',
+  'Take five technical terms from something you are studying. Write a sound-alike and one image for each, then add them as cards in Review.', null, null,
+  'What do you picture when a word is abstract or unfamiliar?', 'A familiar word that sounds like it, linked to an image of the meaning.');
+
+L('m13', 'memory', 'Foreign vocabulary', ['kwik-sb', 'gms', 'sy'],
+  'Vocabulary is the largest memory load in a language. The image method lets you take in dozens of words per session, where rote repetition manages a handful.',
+  ['Picture the meaning as a concrete image first.', 'Find a sound-alike in your own language for the foreign word (keyword substitution).', 'Link the two images.', 'Say the real word aloud several times while holding the picture. GMS stresses this step: the image gets you to the word, the pronunciation must be practised.', 'Store new words on a route so you can review them all without a list, and review on a spaced schedule.'],
+  'Spanish <i>pato</i> (duck): a duck you pat on the head. French <i>pomme</i> (apple): an apple on a cheerleader\'s pom-pom.',
+  'Choose ten words from a language you are learning. Build the images, then add them as cards in Review.', null, null,
+  'What must you add to the image so you can actually say the word?', 'Repeated aloud pronunciation of the real word while holding the image.');
+
+L('m14', 'memory', 'Numbers: give them meaning', ['kwik-sb', 'gms'],
+  'Digits are the hardest thing to remember because they are abstract and all look alike. Every number technique does the same thing: converts digits into something with meaning.',
+  ['Chunk first. 4 9 2 1 7 7 6 is hard; 492 – 1776 is two items.', 'Look for meaning you already own: dates, ages, prices, sports numbers.', 'For anything longer, convert digits to images with a code (next lessons) and place the images on pegs or a route.', 'Always link a number to what it belongs to. A PIN with no link to its card is useless.'],
+  null, 'Run Number Run with 10 numbers before learning a code. Record the score: that is your baseline to beat.', 'numrun', { n: 10, sec: 6 },
+  'What is the common principle behind all number techniques?', 'Convert abstract digits into something meaningful (chunks, known facts or images) and link it to what it belongs to.');
+
+L('m15', 'memory', 'The Major system: digits become sounds', ['kwik-sb', 'gms-cards'],
+  'The classic phonetic code, which Kwik teaches as the "ancient alphanumeric code", gives each digit a consonant sound. Vowels are free, so any number can be turned into a word.',
+  ['0 = s, z · 1 = t, d · 2 = n · 3 = m · 4 = r', '5 = l · 6 = j, sh, ch, soft g · 7 = k, hard g · 8 = f, v · 9 = p, b', 'Memory hooks: t has one downstroke, n two, m three; "four" ends in r; L is 50 in Roman numerals; 8 looks like a handwritten f; 9 is a mirrored p.', 'It is the sound that counts, not the spelling: "phone" = f-n = 82; "knee" = n = 2.', 'Vowels and w, h, y carry no value. Use them as filler.'],
+  '32 = m-n = moon. 94 = b-r = bear. 1492 = t-r-p-n = "turban".',
+  'Open Number Code and run the Sounds sprint until you reach 40 correct in a minute.', 'codes', null,
+  'In the Major system, which sounds stand for 3, 7 and 9?', '3 = m; 7 = k or hard g; 9 = p or b.');
+
+L('m16', 'memory', 'Your 100 number images', ['kwik-sb', 'gms', 'gms-cards'],
+  'Fluent number memory comes from having one fixed image for every pair from 00 to 99, so that you read digits two at a time as pictures.',
+  ['Use the sounds to build a word for each pair: 00 sauce, 01 suit, 02 sun … 99 pipe. The app has a starter list.', 'Replace any word that does not give you an instant, concrete picture. Your own choice sticks better.', 'Drill until each number brings its image in under a second. GMS calls this reflex level and tests it against the clock.', 'To memorise a long number, split it into pairs and chain the images or place them on a route.'],
+  '3.14159265 → 14 tire, 15 doll, 92 pen, 65 jail: a tyre rolls over a doll, who stabs it with a pen, and is taken to jail.',
+  'Edit your 100 images in Number Code, then run Image check daily until 18 of 20 are instant.', 'codes', null,
+  'What is "reflex level" for number images?', 'The image appears instantly, in under about a second, without working out the sounds.');
+
+L('m17', 'memory', 'The GMS number code and figurative codes', ['gms'],
+  'The School of Phenomenal Memory uses its own consonant code and a wider idea: a "figurative code" is any fixed image standing for a frequently used element, not only numbers.',
+  ['GMS digits: 1 N · 2 T, H, Z · 3 B · 4 W, V, K · 5 F, R · 6 J, P, X · 7 S, D · 8 G, Q, L · 9 C · 0 M.', 'Words are chosen from the first consonants: 35 = B + F/R = BeeR; 25 = H + R = HaRe.', 'Build the same kind of fixed images for months, weekdays and letters, so dates and codes become pictures too.', 'Rule: figurative codes are attached to another image (an "association base"); they are not used as bases themselves, because the same code recurs in many memories.', 'Choose one number code, this or the Major system, in Settings and stay with it.'],
+  null, 'If you prefer this code, switch to it in More → Settings and start filling in your own 100 images. Otherwise invent images for the twelve months and write them on paper.', 'codes', null,
+  'What is a figurative code in GMS?', 'A fixed, pre-learned image that stands for a recurring element such as a two-digit number, month, weekday or letter.');
+
+L('m18', 'memory', 'Phone numbers, dates and codes', ['gms', 'mm'],
+  'Precise data needs two things: the digits as images, and a firm link to what they belong to. The GMS course trains this on dozens of everyday information types.',
+  ['Create an image for the owner of the data: the person, the bank card, the historical event. This is the association base.', 'Convert the number into pair images.', 'Attach the images to different parts of the base, in a fixed order (top to bottom, or left to right).', 'Dates: month image + day image + year image on the event image.', 'Test recall immediately, then review on a spaced schedule.', 'Practise with invented numbers. The app never asks for and never stores your real PINs, passwords or account numbers; keep those in your head only.'],
+  'A dentist\'s number ending 47 15 92: a giant tooth with a rock on top, a doll in the middle and a pen stuck in the root.',
+  'Invent a phone number for a made-up person, memorise it with this method, and test yourself in an hour.', 'numrun', { n: 10, sec: 6 },
+  'What is an association base?', 'The image of the thing the data belongs to, onto whose parts you attach the images for the data.');
+
+L('m19', 'memory', 'Give a speech without notes', ['kwik-sb'],
+  'You do not memorise a talk word for word. You memorise the order of the ideas, and speak naturally about each. Kwik teaches this with the location method.',
+  ['Write the talk, then reduce it to 8–12 key points.', 'Turn each key point into one image.', 'Place the images in order on a route: your home, or better, the room you will speak in.', 'Rehearse by walking the route in your mind and talking through each stop.', 'On stage, glance at each location in your mind for the next point.'],
+  null, 'Outline a two-minute talk on a topic you know. Place five key images on a route and deliver it aloud without looking at the outline.', 'palace', null,
+  'What do you memorise for a speech?', 'The sequence of key ideas as images on a route, not the exact words.');
+
+L('m20', 'memory', 'Memorising text word for word', ['kwik-sb', 'gms'],
+  'Poems, quotes, lines and scripts sometimes must be exact. Kwik, who coaches actors on learning lines, gives eight keys that all start with R. GMS adds a way to hold the order.',
+  ['<b>Read</b> it, and <b>Reflect</b>: understand it and make it mean something to you.', '<b>wRite</b> it out by hand.', '<b>Role-play</b>: say it aloud with movement and gesture, as you will deliver it.', '<b>Reform</b>: rehearse in odd voices, tempos and accents. Novelty makes it stick.', '<b>Ration</b>: cut it into bite-sized pieces and learn in short sessions. You remember the starts and ends of sessions best.', '<b>Record</b> it and listen while walking or exercising.', '<b>Rouse</b> the senses: rehearse in the room you will perform in, or tie the material to a particular scent.', 'To lock the order (GMS): one image for the key word of each phrase, placed along a route.'],
+  null, 'Choose a four-line quote or verse you like. Use at least four of the R\'s today and recite it tomorrow morning without looking.', 'palace', null,
+  'Name four of Kwik\'s eight R\'s for memorising lines.', 'Read, Reflect, wRite, Role-play, Reform, Ration, Record, Rouse.');
+
+L('m21', 'memory', 'Playing cards: four systems compared', ['gms-cards', 'gms'],
+  'A shuffled deck is the standard test of a trained memory, and a good workout for images and routes. The Memory Experts\' Tools course compares four ways to give each card an image.',
+  ['<b>Loci first.</b> Whatever the system, the images are stored along a route.', '<b>Major system.</b> Suit gives the first consonant, value the second: one object per card.', '<b>Dominic system.</b> Each card becomes a person from two initials; people are easier to picture than objects.', '<b>PAO.</b> Each card has a Person, an Action and an Object. Three cards make one scene, so a deck needs only 18 stops.', '<b>Ben system.</b> Suit pairs and values give a syllable, so two cards become one image. Fastest, and by far the most to learn.', 'Beginners: start with one object or person per card.'],
+  null, 'Decide images for the thirteen hearts today. Then memorise 10 cards in Card Deck.', 'cards', { n: 10 },
+  'Why does a PAO system need only 18 locations for 52 cards?', 'Three cards combine into one Person-Action-Object scene per location.');
+
+L('m22', 'memory', 'Fixing memories: active repetition', ['gms', 'kwik-sb', 'mm'],
+  'Memorising creates the connection; repetition makes it permanent. GMS is strict about how: repetition is done from memory, never by rereading.',
+  ['Right after memorising, do a complete test recall. Write it down and compare with the source.', 'Fix any errors or gaps with fresh connections.', 'Only then start repeating: walk your support images and look at what is on each, fully recalling every element.', 'Repeat the same day, the next day, then at growing intervals. A few correct recalls spread over weeks beat dozens in one evening.', 'When a fact answers instantly without the image, it has become knowledge. Let the image fade.'],
+  null, 'Recall yesterday\'s route or peg list from memory before looking at anything. Then do your cards in Review.', null, null,
+  'In GMS, what must happen before repetition starts?', 'A full test recall compared with the source, with every error corrected.');
+
+'use strict';
+/* ============ STUDY METHODS ============ */
+L('l1', 'learning', 'Holistic learning: understand, do not just store', ['sy'],
+  'Scott Young\'s central idea is that ideas you connect to other ideas rarely need memorising. Rote learners store isolated facts; fast learners build a web, so each new fact has several things holding it in place.',
+  ['When you meet a new idea, ask three questions: What is this like? What does it look or feel like? How could I use it?', 'Simplify and connect: reduce the idea to its core, then link it to something you already understand well.', 'Reserve pure memory techniques for arbitrary information: names, dates, vocabulary, formulas.', 'Test understanding by explaining, not by rereading.'],
+  null, 'Take one idea you learned this week. Write three links: to another idea in the same subject, to a different subject, and to your daily life.', 'explain', null,
+  'What kind of information still needs pure memory techniques?', 'Arbitrary information with little internal logic: names, dates, vocabulary, formulas.');
+
+L('l2', 'learning', 'Metaphor', ['sy', 'alb'],
+  'Young calls metaphor the trunk of the holistic learning tree. A good comparison lets a new idea borrow the understanding you already have of an old one. You already do this by accident; the skill is doing it deliberately, including in technical subjects.',
+  ['State the idea in one plain sentence.', 'Ask what familiar thing behaves the same way.', 'Check where the comparison holds and where it breaks. Finding the break teaches you as much as the fit.', 'Collect two or three different metaphors for hard ideas; comparing them sharpens the picture.', 'Stuck? An AI assistant is good at proposing analogies. Judge and adapt them yourself.'],
+  'Voltage and current: water in a pipe. Pressure is voltage, flow is current. It breaks down because electricity does not leak out of an open wire.',
+  'Write a metaphor for one concept in Explain It Simply, including where it breaks.', 'explain', null,
+  'What should you always check about a metaphor?', 'Where it stops matching the real idea.');
+
+L('l3', 'learning', 'Visceralization', ['sy'],
+  'Visualization with the other senses added: sound, movement, weight, texture. Young describes the difference as a silent black-and-white film against one in 3D. It makes abstract ideas tangible and works best exactly where pictures do not come by themselves: maths, physics, programming.',
+  ['Pick an abstract idea or formula.', 'Give it a body: what would you see, hear and feel if it were a physical thing?', 'Add motion. What happens as a quantity grows or a step runs?', 'Sketch it roughly if that helps; accuracy matters less than vividness.'],
+  'A derivative: you are standing on a hillside curve and the slope under your feet tilts you forward or back as you walk.',
+  'Choose one formula or abstract rule you use and write a visceral picture for it.', 'explain', null,
+  'How does visceralization differ from visualization?', 'It adds sound, movement and physical sensation to the mental picture.');
+
+L('l4', 'learning', 'The five-year-old method', ['sy'],
+  'If you had to explain your subject to a five-year-old, how would you do it? The age does not matter. The exercise forces two things you might otherwise skip: explaining the idea to yourself, and breaking it into simpler parts. It exposes weak spots long before an exam does.',
+  ['Write the concept at the top of a page.', 'Explain it in simple words and short sentences, with no jargon.', 'Wherever you stall or reach for a technical term, mark it. That is the gap.', 'Go back to the source for the gaps only, then explain again.'],
+  null, 'Do one full round in Explain It Simply on something you believe you already understand.', 'explain', null,
+  'What two things does the five-year-old method force you to do?', 'Explain the concept to yourself, and reduce it to simpler components.');
+
+L('l5', 'learning', 'Flow-based note-taking', ['sy'],
+  'Traditional notes try to copy the lecture in order. Flow-based notes record your own mental picture of the subject as it forms, so the learning happens during the lecture and not weeks later.',
+  ['Write only the important ideas, in few words.', 'Draw arrows between related ideas as you notice the links.', 'Go back and add to earlier parts of the page; do not write strictly top to bottom.', 'Put it in your own form: small diagrams, metaphors, examples.', 'Limit: when exact detail matters, or the material is new and fast, combine it with normal notes or a recording.'],
+  null, 'Watch or listen to ten minutes of any talk and take flow-based notes on one sheet. Then explain the talk from the sheet alone.', null, null,
+  'What does flow-based note-taking record instead of the lecture\'s own order?', 'Your own mental picture of the subject: key ideas and the connections between them.');
+
+L('l6', 'learning', 'Active reading', ['sy', 'sr-comp'],
+  'Reading with a pen and a set of questions turns a passive activity into study. It is slower per page and far faster per idea retained.',
+  ['Before a section, turn its heading into a question.', 'After each section, stop and write in the margin or a notebook: the main point, how you would picture it or what it is like, and how it connects to something earlier.', 'Mark only what answers your question, not everything that looks important.', 'At the end of the chapter, close the book and write a summary from memory.'],
+  null, 'Read one chapter or article today this way. Compare what you can recall an hour later with your usual reading.', 'focus', null,
+  'What do you write after each section in active reading?', 'The main point, a picture or metaphor for it, and a link to something you already know.');
+
+L('l7', 'learning', 'Deep linking', ['sy'],
+  'Young describes three directions in which to link an idea. Deep linking takes more effort up front and saves the time most students spend relearning.',
+  ['<b>Lateral:</b> link to another idea at the same level in the same subject.', '<b>Vertical:</b> link to an idea in a different subject or in everyday life.', '<b>Deep:</b> link to the idea\'s foundations. Why is it true? Where does the formula come from? What problem was it invented to solve?', 'For key ideas, do not stop at how to use a rule; trace it back one level.'],
+  'Do not only memorise that the area of a circle is πr². Cut the circle into thin wedges, rearrange them into a near-rectangle of height r and width πr, and the formula is obvious.',
+  'Pick one formula or rule you use by rote and find out where it comes from. Add the answer as a Review card.', null, null,
+  'What does a deep link connect an idea to?', 'Its foundations: why it is true and where it comes from.');
+
+L('l8', 'learning', 'The branch method and mental debugging', ['sy'],
+  'When you cannot "get" something, the cause is usually a missing or weak prerequisite further down the chain, not a lack of ability. Metaphors and pictures only help once you roughly understand; before that you have to find the broken link.',
+  ['Write the idea you are stuck on at the top.', 'Below it, list what you need to understand first. Under each of those, list their prerequisites, like branches.', 'Test each branch quickly. The first one you cannot explain is where to study.', 'Debugging also applies afterwards: when you get a problem wrong, find the exact step where your thinking left the correct path and fix that step.'],
+  null, 'Take one topic you find confusing and draw its branch diagram down to things you are sure of.', null, null,
+  'What is the usual reason you cannot grasp a new concept?', 'A prerequisite it depends on is missing or too weak.');
+
+L('l9', 'learning', 'Notes compression and study dissection', ['sy'],
+  'Two of Young\'s tools for large volumes of material. Compression forces synthesis; dissection replaces the vague instruction "study" with a specific plan.',
+  ['<b>Compression:</b> take one large blank sheet and fit the major ideas of the whole course or topic onto it, in tiny writing, diagrams and links. Deciding what earns space is the learning.', '<b>Dissection:</b> split the material by type. What must be understood (concepts), what must be memorised (arbitrary facts), and what must be practised (procedures)?', 'Assign each type its method: explanation and metaphor for concepts, memory techniques and flashcards for facts, timed problems for procedures.', 'Study from the plan, not from page one.'],
+  null, 'Compress one topic you are studying onto a single page this week.', null, null,
+  'In study dissection, what three types do you sort material into?', 'Concepts to understand, arbitrary facts to memorise, and procedures to practise.');
+
+L('l10', 'learning', 'Deliberate practice, projects and apply-first', ['sy', 'alb'],
+  'Skill comes from doing, at the edge of your ability, with feedback. Young argues for reversing the school order when learning for yourself: try to apply first, then learn the correct method.',
+  ['Pick a small real project that needs the skill.', 'Attempt the problem before reading the solution. The struggle primes you to absorb the method.', 'Isolate your weakest sub-skill and drill that alone.', 'Get fast feedback: answers, a tutor, a test, or running the code.', 'Schedule practice blocks in your week instead of waiting for free time.'],
+  null, 'Define one mini-project for a skill you are learning, small enough to finish in a week. Write it down with a deadline.', null, null,
+  'What does "apply first" mean?', 'Attempt to use or solve before being taught the method, then learn the correct approach.');
+
+L('l11', 'learning', 'Active recall: test, do not reread', ['alb', 'mm', 'anki', 'kwik-sb'],
+  'Pulling information out of memory strengthens it far more than putting it in again. Rereading and highlighting feel fluent and teach little.',
+  ['Study the material once, properly.', 'Take a break.', 'Close everything and reproduce it: write, speak, or answer questions.', 'Check against the source, correct, and repeat later.', 'Flashcards are active recall in small units. An AI assistant can also write you a quiz from your notes.'],
+  null, 'Run a Focus Session and complete the brain dump at the end without looking at your material.', 'focus', null,
+  'Why is rereading weak?', 'It feels fluent but does not make you retrieve; retrieval is what strengthens memory.');
+
+L('l12', 'learning', 'Writing good flashcards', ['anki', 'mm', 'alb'],
+  'Spaced-repetition software such as Anki only works as well as the cards you feed it. The course in your library covers the tool; these are the principles that carry over to any deck, including the Review tab here.',
+  ['Understand first, then make cards. Do not card what you do not understand.', 'One fact per card. Split long answers into several cards.', 'Ask a specific question with one short, unambiguous answer.', 'Use your own words, and add an image or mnemonic when a fact resists.', 'Review every day. A small daily habit beats a weekly marathon, and the algorithm assumes you show up.', 'Suspend or rewrite cards you keep missing; the card is at fault.'],
+  null, 'Write five cards in Review from something you studied today, following these rules.', null, null,
+  'What is the rule for how much goes on one flashcard?', 'One fact, with a single short answer.');
+
+L('l13', 'learning', 'Starting a new subject with an AI assistant', ['alb'],
+  'The Accelerated Learning Blueprint uses a chatbot as a guide to the map of a field before you start walking through it.',
+  ['<b>Pareto:</b> ask which 20% of the topics give 80% of the practical ability, and start there.', '<b>Mind map:</b> ask for the main ideas, sub-ideas and how they connect.', '<b>Vocabulary:</b> ask for the terms you must know, in plain words, so later reading is not blocked.', '<b>Others\' mistakes:</b> ask what beginners commonly get wrong.', '<b>Resources and projects:</b> ask for good sources and for small projects that exercise each part.', 'Ask "stupid" questions freely. Verify facts that matter; chatbots can be confidently wrong.'],
+  'Prompt: "I want to learn X for the purpose of Y. Which 20% of X will give me 80% of the result? List the key terms a beginner must know."',
+  'Run these five questions on a subject you are about to start and save the answers.', null, null,
+  'What is the Pareto question for a new subject?', 'Which 20% of the topics will give 80% of the results I want?');
+
+L('l14', 'learning', 'Going deeper with an AI assistant', ['alb'],
+  'Once you have the basics, use the assistant to probe, not to replace your thinking. The Blueprint\'s point is that it is a sparring partner, not the final product.',
+  ['Explain a concept in your own words and ask whether your understanding is correct.', 'Ask for related concepts and how each one connects to what you know.', 'Ask for two different analogies and compare them.', 'Ask for a 10-question quiz on your notes. Answer before looking.', 'Ask it to turn your notes into flashcards, then edit them.', 'Teach it: explain the topic and ask for the gaps. Knowing something passively is different from being able to produce it.', 'For long texts, skim first, ask for a summary, then read with questions.'],
+  null, 'Paste your notes on one topic into an assistant, ask for a 10-question quiz, and add the questions you miss to Review.', null, null,
+  'What is the difference between passive and active knowledge?', 'Passive: you recognise and follow it. Active: you can produce and explain it yourself.');
+
+L('l15', 'learning', 'Memorising books and lectures', ['gms', 'sy'],
+  'The later GMS courses apply the system to real study material. You do not memorise sentences; you memorise a skeleton that lets you rebuild the content.',
+  ['Read a passage and understand it.', 'Give each fragment a short title of your own, a "sense support", and turn the title into an image.', 'Store those images in order on a route. Exact data in the fragment (numbers, names) is attached to its title image.', 'For a whole book, memorise the table of contents first; each heading becomes a place where its section\'s key points hang.', 'Retell each section from its images, compare with the text, then review on a spaced schedule.'],
+  null, 'Take one chapter. Write a five-word title for each section, place the titles on a route, and retell the chapter aloud.', 'palace', null,
+  'What is a "sense support" in GMS text memorisation?', 'A short title you give a text fragment, turned into an image, from which you can rebuild the fragment.');
+
+/* ============ SPEED READING ============ */
+L('r1', 'reading', 'Measure your baseline', ['kwik-sr', 'sr-comp', 'kk'],
+  'Reading is a skill most people stopped training at about age ten. The typical adult reads around 200–250 words a minute. You cannot improve what you do not measure.',
+  ['Speed is words per minute. Comprehension is how much you can answer afterwards. Your real rate is the two multiplied.', 'Three habits hold speed down: saying every word in your head, jumping back to reread, and taking in one word per glance.', 'Test now, before training, and again each week on a fresh passage.', 'Compare like with like. Dense technical text is always slower than a story.'],
+  null, 'Take the Reading Speed Test at your normal pace. Write down the number.', 'wpm', null,
+  'How is effective reading rate calculated?', 'Words per minute multiplied by comprehension.');
+
+L('r2', 'reading', 'Use a visual pacer', ['kwik-sb', 'kwik-sr'],
+  'Your eyes are drawn to motion. A finger, pen or cursor moving under the line pulls them forward at a steady rate and is the single quickest gain for most readers. Kwik teaches it in both Superbrain and his reading course.',
+  ['Run your finger or a pen under each line as you read, smoothly, slightly faster than is comfortable.', 'Look just above the tip. Do not let your eyes run ahead or fall behind.', 'On a screen, use the cursor or the Guide mode of the Pacer drill.', 'It feels childish for about a day. Measure before and after.'],
+  null, 'Read with Guide mode in the Pacer at about 20% above your baseline speed.', 'pacer', null,
+  'Why does a pacer raise reading speed?', 'The eyes follow motion, so a moving guide keeps them going forward at a steady pace and cuts wandering and rereading.');
+
+L('r3', 'reading', 'Stop back-skipping', ['kwik-sr', 'sr-comp', 'kk'],
+  'Regression, the habit of flicking back to reread words, can eat a large share of reading time and breaks the flow of meaning. Much of it is a nervous habit and not a real need.',
+  ['Decide before you start that you will keep moving forward.', 'Use the pacer; it does not go backwards.', 'Cover what you have read with a card moving down the page if the habit is strong.', 'If you truly lost the thread, finish the paragraph first, then reread it once on purpose.', 'Trust that the brain fills small gaps from context.'],
+  null, 'Read a built-in passage in Flash mode, where going back is impossible, then say what it was about.', 'pacer', null,
+  'What is regression in reading?', 'Unnecessarily jumping back to reread words or lines.');
+
+L('r4', 'reading', 'Widen your eye span', ['llg', 'sr-comp', 'kk'],
+  'Eyes read in jumps and stops, and only the stops take in text. Fewer, wider stops per line means more words per second. Learn Like a Genius uses Schulte tables for this; other courses call the result chunking.',
+  ['Do a Schulte table daily: eyes fixed on the centre, find the numbers in order with peripheral vision.', 'When reading, aim your eyes at the middle of word groups, not at each word.', 'Skip the margins: start each line a word or two in and stop a word or two before the end.', 'Work up from two words per stop to three and four.'],
+  null, 'Do three 5×5 Schulte tables, then Eye Span with digits.', 'schulte', null,
+  'Where do you look during a Schulte table?', 'At the centre square, finding the numbers with peripheral vision.');
+
+L('r5', 'reading', 'Quiet the inner voice', ['llg', 'kwik-sr', 'kk'],
+  'Subvocalising, saying each word silently, ties reading to speaking speed. You do not need to pronounce a word to understand it: you do not say "stop" at a stop sign. The aim is to reduce it, not remove it.',
+  ['Read in word groups so there is no time to say each word.', 'Push the pacer faster than you can speak.', 'Occupy the voice: count "one, two, three" quietly or hum while reading practice text.', 'Keep the inner voice for what deserves it: poetry, key definitions, hard passages.'],
+  null, 'Use Flash mode at 3 words per group and a speed where you cannot pronounce the words. Start around 350 wpm.', 'pacer', null,
+  'Why does subvocalising limit speed?', 'It holds reading down to roughly the pace of speech.');
+
+L('r6', 'reading', 'Preview before you read', ['llg', 'sr-comp', 'sr-deep'],
+  'A few minutes of pre-reading gives the brain a frame to hang details on, and often shows that parts can be skipped. It is step one of the three-step method in Learn Like a Genius.',
+  ['Read the title, introduction, headings, first sentences of paragraphs, anything in bold, figures and the conclusion.', 'Ask what the piece is about and what you want from it.', 'Skimming is a fast pass for the gist. Scanning is hunting for one specific item. Choose which you need.', 'Then read properly, already knowing the shape.'],
+  null, 'Preview a long article for two minutes. Write the three questions you expect it to answer, then read it.', null, null,
+  'What is the difference between skimming and scanning?', 'Skimming is a fast pass for the overall gist; scanning is searching for a specific piece of information.');
+
+L('r7', 'reading', 'Change gears', ['sr-deep', 'sr-comp', 'kk'],
+  'Good readers do not have one speed. They slow down for dense, important or unfamiliar material and move quickly through what is light or already known.',
+  ['Before reading, decide your purpose: overview, full understanding, or finding something.', 'Judge the density of the text. Light text: fast. Heavy text: slower, with pauses.', 'Speed up through examples and repetition; slow down at definitions and arguments.', 'For unfamiliar subjects, read the first lines of paragraphs and the opening and closing sections first.'],
+  null, 'Read one article at three deliberate speeds: fast through the easy parts, normal, and slow at the key argument.', 'pacer', null,
+  'What decides how fast you should read a text?', 'Your purpose and the density and familiarity of the material.');
+
+L('r8', 'reading', 'Let comprehension catch up', ['llg', 'kwik-sr'],
+  'When you first push speed, understanding drops. That is expected. With practice at the higher pace, comprehension catches up, and your old speed begins to feel slow.',
+  ['In practice sessions, deliberately read faster than you can fully follow for a few minutes.', 'Drop back by about a third. This is your new working speed.', 'After every reading, recall: say or write the main points without looking.', 'Turn what matters into notes or cards. Reading fast and remembering nothing saves no time.'],
+  null, 'Take the Reading Speed Test again, pushing your pace. Check whether effective wpm rose or fell.', 'wpm', null,
+  'What should you do right after reading something you want to keep?', 'Recall the main points from memory, then note or card the important ones.');
+
+L('r9', 'reading', 'Flash reading and timed drills', ['sr-comp', 'kk'],
+  'Rapid serial visual presentation shows words one group at a time in a fixed spot, so the eyes do not move at all. It is a training tool for pace and for breaking the inner voice, and timed drills keep the practice honest.',
+  ['Start at a comfortable speed with two or three words per group.', 'Raise the speed by 25 wpm every minute until you lose the thread.', 'Step back 50 wpm and read for five minutes.', 'Finish by summarising aloud.', 'Use real page reading for study; flash reading removes the ability to glance back, so it suits practice more than hard texts.'],
+  null, 'Do a five-minute climb in Flash mode on your own pasted text.', 'pacer', null,
+  'What does RSVP stand for and what does it remove?', 'Rapid serial visual presentation; it removes eye movement and back-skipping.');
+
+L('r10', 'reading', 'A daily reading workout', ['kwik-sr', 'llg', 'kk'],
+  'Speed reading is trained like a sport: short, regular, slightly beyond comfort. Fifteen minutes a day for a few weeks changes your default.',
+  ['Two minutes: Schulte table or Eye Span to warm up the eyes.', 'Four minutes: read with a pacer, comfortably.', 'Then reread the same passage in less time, and again in less still, forcing the pacer faster each round even if comprehension dips.', 'Two minutes: fresh text at a pace you can follow. Notice it is faster than before.', 'One minute: recall what you read.', 'Retest your effective wpm weekly.'],
+  null, 'Do the full workout once today using the Pacer and your own book.', 'pacer', null,
+  'What is the purpose of rereading the same passage against a shrinking clock?', 'It forces the eyes to move faster than comfortable, so normal reading afterwards feels slow and speeds up.');
+
+/* ============ MENTAL MATH ============ */
+L('x1', 'math', 'Add from left to right', ['benj', 'mmm', 'vedic'],
+  'On paper we add right to left and carry. In the head that means holding digits you cannot yet say. Arthur Benjamin\'s first rule in Secrets of Mental Math is to work left to right, biggest part first, keeping one running total.',
+  ['Keep the first number whole. Break the second into hundreds, tens and ones.', 'Add the largest part first and say the new total to yourself.', 'Add the next part, then the last.', 'You start saying the answer before you finish, and a rough answer comes first.'],
+  '538 + 327 → 538 + 300 = 838 → + 20 = 858 → + 7 = <b>865</b>.',
+  'Sprint 2-digit additions, then 3-digit.', 'math', { cat: 'add2' },
+  'Why add left to right in your head?', 'You deal with the largest part first and keep a single running total, with nothing to carry and hold.');
+
+L('x2', 'math', 'Subtract with complements', ['benj', 'mmm', 'vedic'],
+  'Borrowing is awkward mentally. It is easier to subtract too much and give some back, and for that you need instant complements.',
+  ['Round the number you are subtracting up to the next ten or hundred.', 'Subtract the round number.', 'Add back the difference (the complement).', 'Complements to 100: the tens digits add to 9, the ones add to 10. Vedic maths says "all from 9 and the last from 10".'],
+  '725 − 468 → 725 − 500 = 225 → + 32 = <b>257</b>. And 1000 − 468: 9−4, 9−6, 10−8 → <b>532</b>.',
+  'Sprint Complements until they are instant, then 2-digit subtraction.', 'math', { cat: 'comp' },
+  'What is the rule for a complement to 1000?', 'Take every digit from 9 and the last digit from 10.');
+
+L('x3', 'math', 'Multiply by one digit, left to right', ['benj', 'hcm'],
+  'All larger multiplication is built from this. Again, biggest part first.',
+  ['Split the larger number into tens and ones.', 'Multiply the tens, say the result.', 'Multiply the ones and add.', 'For three digits, the same: hundreds, then tens, then ones, updating the total each time.'],
+  '7 × 46 → 280 + 42 = <b>322</b>. 6 × 384 → 1800 → + 480 = 2280 → + 24 = <b>2304</b>.',
+  'Sprint 2-digit × 1-digit.', 'math', { cat: 'x1' },
+  'What is 8 × 67, worked left to right?', '480 + 56 = 536.');
+
+L('x4', 'math', 'Multiply by 11', ['benj', 'mmm', 'tables'],
+  'The first trick most mental-math courses teach, because it is instant and shows that structure beats effort.',
+  ['For a two-digit number, add its digits.', 'Put the sum between them.', 'If the sum is 10 or more, carry 1 to the left digit.', 'Longer numbers: write the last digit, then each pair of neighbours added right to left, then the first digit, carrying as needed.'],
+  '53 × 11 → 5 (8) 3 = <b>583</b>. 87 × 11 → 8 (15) 7 → <b>957</b>.',
+  'Sprint ×11.', 'math', { cat: 'x11' },
+  'What is 76 × 11?', '7 (13) 6 → 836.');
+
+L('x5', 'math', 'Squares ending in 5, and close cousins', ['benj', 'mmm', 'easycal', 'vedic'],
+  'A two-step shortcut, and the same pattern handles any two numbers with the same tens digit whose ones digits add to ten.',
+  ['Squaring a number ending in 5: multiply the tens digit by the next number up.', 'Attach 25.', 'Same tens, ones adding to 10: multiply the tens digit by the next number up, then attach the product of the ones (two digits).'],
+  '65² → 6 × 7 = 42 → <b>4225</b>. 73 × 77 → 7 × 8 = 56, 3 × 7 = 21 → <b>5621</b>.',
+  'Sprint Squares ending in 5, then Same tens.', 'math', { cat: 'sq5' },
+  'What is 85²?', '8 × 9 = 72, attach 25 → 7225.');
+
+L('x6', 'math', 'Square any two-digit number', ['benj', 'mmm'],
+  'Benjamin\'s signature method. It turns a hard multiplication into an easy one plus a tiny square.',
+  ['Find the distance d to the nearest multiple of ten.', 'Go down by d and up by d to get two numbers, one of them round.', 'Multiply those two.', 'Add d².'],
+  '43² → d = 3 → 40 × 46 = 1840 → + 9 = <b>1849</b>. 78² → d = 2 → 80 × 76 = 6080 → + 4 = <b>6084</b>.',
+  'Sprint Square any 2-digit number.', 'math', { cat: 'sq2' },
+  'What is 57² by this method?', '60 × 54 = 3240, + 3² = 3249.');
+
+L('x7', 'math', 'Multiply numbers close to 100', ['vedic', 'easycal', 'smart', 'benj'],
+  'The Vedic base method: when both numbers are near a base such as 100, the answer falls out of their distances from it.',
+  ['Write each number\'s distance from 100 (below = negative, above = positive).', 'Left part: cross-add. Take either number plus the other\'s distance.', 'Right part: multiply the two distances, written as two digits.', 'If one number is above and one below, the right part is negative: subtract it from the left part × 100.'],
+  '96 × 93: distances −4, −7. 96 − 7 = 89; 4 × 7 = 28 → <b>8928</b>. 104 × 107: 111 | 28 → <b>11128</b>. 103 × 96: 99 | −12 → 9900 − 12 = <b>9888</b>.',
+  'Sprint Numbers near 100.', 'math', { cat: 'near100' },
+  'What is 97 × 94?', 'Distances 3 and 6: 97 − 6 = 91, 3 × 6 = 18 → 9118.');
+
+L('x8', 'math', 'Two digits by two digits', ['benj', 'vedic', 'smart', 'mmm'],
+  'There are several routes; choose the one that makes the numbers easy. Benjamin teaches three, and the Vedic courses add vertical-and-crosswise.',
+  ['<b>Addition method:</b> split one number. 23 × 41 = 23 × 40 + 23.', '<b>Subtraction method:</b> when a number ends in 8 or 9. 29 × 34 = 30 × 34 − 34.', '<b>Factoring:</b> when a number factors nicely. 45 × 14 = 45 × 2 × 7.', '<b>Vertical and crosswise:</b> tens × tens, the two cross products added, ones × ones; combine with place value.'],
+  '23 × 41 → 920 + 23 = <b>943</b>. 29 × 34 → 1020 − 34 = <b>986</b>. Crosswise 23 × 41: 2×4 = 8 | 2×1 + 3×4 = 14 | 3×1 = 3 → 800 + 140 + 3 = 943.',
+  'Sprint 2-digit × 2-digit. Before each one, pick the method.', 'math', { cat: 'x2' },
+  'Which method suits 49 × 26?', 'Subtraction: 50 × 26 − 26 = 1300 − 26 = 1274.');
+
+L('x9', 'math', 'Tables beyond 10, doubling and halving', ['tables', 'smart', 'easycal', 'hcm'],
+  'Knowing products up to 20 × 20 by reflex, and being able to double and halve anything, makes every other method faster.',
+  ['Two numbers in the teens: add the ones digit of one to the other number, attach a zero, add the product of the ones digits.', 'Doubling: left to right. 2 × 78 = 140 + 16.', 'Multiply by 4 = double twice; by 8 = double three times.', 'Multiply by 5 = halve and attach a zero; divide by 5 = double and move the decimal.', 'Halve one, double the other: 14 × 35 = 7 × 70.'],
+  '14 × 17 → 17 + 4 = 21 → 210 → + 28 = <b>238</b>. 5 × 468 → 234 → <b>2340</b>.',
+  'Sprint Tables up to 20 × 20, then Double and halve.', 'math', { cat: 'tables' },
+  'What is 16 × 13 by the teens method?', '13 + 6 = 19 → 190, + 6 × 3 = 18 → 208.');
+
+L('x10', 'math', 'Division in your head', ['benj', 'vedic', 'mmm'],
+  'Division is naturally left to right, so mental division is short division spoken aloud.',
+  ['Divide the leading digits, say that digit of the answer.', 'Carry the remainder into the next digit and continue.', 'Simplify first when you can: divide both numbers by a common factor, or split the divisor (÷ 12 = ÷ 4 then ÷ 3).', 'Check with casting out nines or by estimating.', 'Divisibility: a number divides by 3 or 9 if its digit sum does; by 4 if its last two digits do.'],
+  '742 ÷ 7 → 1, 0, 6 = <b>106</b>. 936 ÷ 12 → 936 ÷ 4 = 234 → ÷ 3 = <b>78</b>.',
+  'Sprint Divide by a 1-digit number.', 'math', { cat: 'div1' },
+  'How can you divide by 12 easily?', 'Divide by 4, then by 3 (or by 3 then 4).');
+
+L('x11', 'math', 'Percentages and guesstimation', ['benj', 'easycal', 'smart'],
+  'In daily life an answer within a few percent, right now, beats an exact one later. Benjamin calls it the art of guesstimation.',
+  ['10% = move the decimal one place. 1% = two places. Build anything from those: 15% = 10% + half of it.', 'Percentages swap: 8% of 50 = 50% of 8 = 4.', 'To estimate a product, round one number up and the other down.', 'Tip: 20% = double the 10%.', 'Rule of 72: years to double money ≈ 72 ÷ interest rate.'],
+  '15% of 240 → 24 + 12 = <b>36</b>. 38 × 62 ≈ 40 × 60 = 2400 (exact: 2356).',
+  'Sprint Percentages.', 'math', { cat: 'pct' },
+  'What is 4% of 75, the easy way?', 'Swap it: 75% of 4 = 3.');
+
+L('x12', 'math', 'The day of the week for any date', ['benj', 'lfmm'],
+  'A classic party piece taught in Secrets of Mental Math: add three small codes and take the remainder after dividing by 7.',
+  ['<b>Month codes:</b> Jan 6, Feb 2, Mar 2, Apr 5, May 0, Jun 3, Jul 5, Aug 1, Sep 4, Oct 6, Nov 2, Dec 4. In a leap year, Jan is 5 and Feb is 1.', '<b>Year code</b> for 20xx: take the last two digits, add a quarter of them (ignore the remainder), reduce by sevens. For 19xx add 1.', 'Add month code + day + year code. Subtract sevens.', 'Result: 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday, 5 Friday, 6 Saturday, 0 Sunday.'],
+  '14 November 2026: year 26 + 6 = 32 → 4. Month 2. Day 14 → 0. Total 6 = <b>Saturday</b>.',
+  'Memorise the month codes with a peg list, then try the Day of the week sprint.', 'math', { cat: 'dow' },
+  'What is the year code for 2026?', '26 + 6 = 32; 32 − 28 = 4.');
+
+L('x13', 'math', 'Square roots and cube roots of perfect powers', ['hcm', 'mmc', 'vedic', 'lfmm'],
+  'Finding the cube root of a six-digit perfect cube in seconds looks like magic and needs only ten facts.',
+  ['Learn the cubes of 1–9: 1, 8, 27, 64, 125, 216, 343, 512, 729.', 'Last digit of the root: the last digit of the cube tells you. 1→1, 8→2, 7→3, 4→4, 5→5, 6→6, 3→7, 2→8, 9→9.', 'First digit: drop the last three digits and find the largest cube that fits in what is left.', 'Square roots of perfect squares: the first digit comes from the leading part the same way; the last digit has two candidates (a square ending in 6 has a root ending in 4 or 6). Square the midpoint ending in 5 to decide.'],
+  '∛175,616: ends in 6 → root ends in 6; 175 holds 5³ = 125 → <b>56</b>. √3364: 33 holds 5² → fifties; ends in 4 → 52 or 58; 55² = 3025 &lt; 3364 → <b>58</b>.',
+  'Memorise the nine cubes as Review cards, then have someone cube a two-digit number on a calculator and tell you the result.', 'math', { cat: 'sq2' },
+  'What is the cube root of 438,976?', 'Ends in 6 → 6. 438 holds 7³ = 343 → 76.');
+
+/* ---------- program order: 12 weeks × 6 lessons ---------- */
+const PROGRAM = [
+  'f1', 'f2', 'm1', 'm2', 'r1', 'x1',
+  'f3', 'm3', 'm5', 'r2', 'x2', 'l1',
+  'f10', 'm6', 'm7', 'r3', 'x3', 'l11',
+  'f8', 'm8', 'm10', 'r4', 'x4', 'l4',
+  'f11', 'm11', 'm14', 'r5', 'x5', 'l2',
+  'f9', 'm15', 'm16', 'r6', 'x6', 'l3',
+  'f4', 'm12', 'm13', 'r7', 'x7', 'l5',
+  'f5', 'm9', 'm17', 'r8', 'x8', 'l6',
+  'f7', 'm18', 'm19', 'r9', 'x9', 'l7',
+  'f6', 'm20', 'm4', 'r10', 'x10', 'l8',
+  'f12', 'm21', 'l12', 'l9', 'x11', 'l10',
+  'm22', 'l13', 'l14', 'l15', 'x12', 'x13'
+];
+const WEEK_THEMES = ['Switch on', 'Chains and pegs', 'Make it stick', 'Places and names', 'Faces and numbers', 'The number code', 'Words and vocabulary', 'Bigger systems', 'Real-world data', 'Texts and routines', 'Cards and study systems', 'Putting it together'];
+
+'use strict';
+const PASSAGES = [
+  { title: 'The banquet that started it all',
+    text: 'The oldest story about memory technique begins with a disaster. Around 500 BC the Greek poet Simonides of Ceos was hired to recite at a banquet given by a wealthy nobleman. Part way through the evening he was called outside. While he stood in the street, the roof of the hall collapsed, killing everyone inside. The bodies were so badly crushed that the families could not tell who was who.\nSimonides found that he could help. By closing his eyes and picturing the hall, he was able to walk around the table in his mind and name each guest according to where that person had been sitting. From this he drew a conclusion that later teachers repeated for two thousand years: the mind keeps hold of places with very little effort, so anything attached to a place can be found again.\nRoman orators turned the observation into a working method. A speaker would choose a building he knew well, fix a path through it, and leave a striking image at each stop along the way: one for every point of the speech. To deliver the speech he simply took the walk again. The phrase "in the first place" is sometimes said to be a leftover of this habit.\nThe method survived because it works for almost anyone. Modern memory competitors, who memorise the order of a shuffled deck of cards in under a minute, are using the same idea as Simonides: familiar locations, vivid images, and a fixed route between them.',
+    qs: [{ q: 'Why was Simonides not killed?', o: ['He left early to go home', 'He had been called outside', 'He was sitting near the door', 'He arrived late'], a: 1 },
+      { q: 'How did he identify the guests?', o: ['By their clothing', 'By their voices', 'By where each had been sitting', 'By a written guest list'], a: 2 },
+      { q: 'What did Roman orators place along their route?', o: ['Written notes', 'A striking image for each point', 'Numbered stones', 'Their students'], a: 1 },
+      { q: 'What do modern memory competitors have in common with Simonides?', o: ['They use locations, images and a route', 'They recite poetry', 'They rely on repetition alone', 'They memorise only numbers'], a: 0 }] },
+  { title: 'How your eyes actually read',
+    text: 'It feels as if your eyes glide smoothly along a line of print. They do not. Reading is a series of quick jumps, called saccades, separated by short stops, called fixations. During a jump the eye is effectively blind; all the information comes in during the stops, each of which lasts roughly a quarter of a second.\nIn one fixation you see only a small area in sharp detail, about the width of a short word or two. Around that sharp centre is a wider, blurrier zone that still tells you something about the length and shape of the words ahead. Skilled readers use this preview to decide where to land next.\nA slow reader typically stops on nearly every word, and often jumps backwards to look again at something already passed. These backward jumps are called regressions. Some are needed, because the text really was confusing, but many are simply habit.\nThis picture explains most speed-reading advice. Guiding the eyes with a finger or pen gives them a moving target, which makes the jumps more regular and discourages regressions. Practising with tables of scattered numbers trains attention to the edges of vision, so that each stop collects more. Grouping words means fewer stops per line.\nThere is a limit, however. Understanding takes time, and the eye can only take in so much per stop. Claims of reading thousands of words a minute with full comprehension describe skimming. The realistic goal is to remove wasted motion, and then to choose your speed to suit the text.',
+    qs: [{ q: 'What is a saccade?', o: ['A stop on a word', 'A quick jump of the eye', 'A backward glance', 'A type of blurred vision'], a: 1 },
+      { q: 'When does the eye take in information?', o: ['During jumps', 'During fixations', 'Only at the end of a line', 'Continuously'], a: 1 },
+      { q: 'What are regressions?', o: ['Jumps backwards to earlier text', 'Stops that last too long', 'Skipped lines', 'Words seen at the edge of vision'], a: 0 },
+      { q: 'According to the passage, what is the realistic goal of speed reading?', o: ['Thousands of words a minute', 'Removing all fixations', 'Removing wasted motion and choosing a suitable speed', 'Never rereading anything'], a: 2 }] },
+  { title: 'The curve that Ebbinghaus drew',
+    text: 'In the 1880s a German psychologist named Hermann Ebbinghaus spent years testing a single subject: himself. He wanted to measure memory without the help of meaning, so he invented thousands of nonsense syllables, such as "zof" and "dax", learned lists of them until he could recite each list perfectly, and then tested how much remained after various delays.\nThe result was a steep downward curve. Within an hour he had lost more than half of what he had learned. After a day about two thirds was gone. After that the loss slowed, and a small remainder lasted for weeks.\nTwo further findings matter more than the curve itself. First, relearning a forgotten list took less time than learning it the first time, which showed that something had stayed behind even when he could recall nothing. Second, each time he relearned a list, the forgetting that followed was slower. Reviews spaced out over several days produced much better retention than the same number of repetitions crammed into one sitting.\nNonsense syllables are a worst case. Material that is meaningful, vivid, or tied to things you already know fades far more slowly, which is why memory techniques put so much effort into turning dry facts into pictures and stories.\nPut together, these results give a simple recipe. Make the material meaningful when you first learn it. Test yourself soon afterwards. Then come back to it at widening intervals, just as it is starting to slip. Modern flashcard programs automate exactly this schedule.',
+    qs: [{ q: 'What did Ebbinghaus memorise?', o: ['Poems', 'Nonsense syllables', 'Number tables', 'Faces'], a: 1 },
+      { q: 'Roughly how much had he forgotten after one day?', o: ['About a tenth', 'About a third', 'About two thirds', 'Everything'], a: 2 },
+      { q: 'What did faster relearning show?', o: ['That the lists were too easy', 'That something remained even when recall failed', 'That he had cheated', 'That sleep erases memory'], a: 1 },
+      { q: 'Which schedule gave the best retention?', o: ['All repetitions in one sitting', 'Reviews spaced over several days', 'One very long session', 'No review at all'], a: 1 }] },
+  { title: 'Why the night shift matters',
+    text: 'For a long time sleep was thought of as the brain switching off. Recordings of brain activity show something closer to the opposite. While you sleep, the brain replays patterns of activity from the day and gradually shifts new memories from temporary storage, which depends on a structure called the hippocampus, into longer-term networks spread across the cortex.\nDifferent stages of sleep seem to favour different kinds of learning. Deep slow-wave sleep, which is concentrated in the first half of the night, is linked to remembering facts and events. Dreaming sleep, which is concentrated toward morning, is linked to skills, patterns and making connections between ideas. Cutting the night short at either end therefore costs something.\nExperiments make the point clearly. People who learn a list of word pairs in the evening and sleep remember more the next day than people who learn the same list in the morning and stay awake for the same number of hours. People who are kept awake the night after learning show little benefit from the study session, even after later recovery sleep.\nSleep also prepares the brain for the following day. After a poor night the ability to take in new information drops sharply, a little like trying to save files to a full drive.\nThe practical lessons are modest. Review important material briefly in the evening. Do not trade sleep for extra study time before a test. A short nap after a learning session helps too. For a learner, sleep is part of the work.',
+    qs: [{ q: 'Which structure does temporary memory storage depend on?', o: ['The cortex', 'The hippocampus', 'The cerebellum', 'The brain stem'], a: 1 },
+      { q: 'What is deep slow-wave sleep linked to?', o: ['Remembering facts and events', 'Skills and patterns only', 'Waking up refreshed', 'Dream recall'], a: 0 },
+      { q: 'In the word-pair experiment, who remembered more?', o: ['Those who stayed awake', 'Those who slept after learning', 'Both groups equally', 'Those who studied twice'], a: 1 },
+      { q: 'What does a poor night do to the next day\'s learning?', o: ['Nothing', 'Improves focus', 'Sharply reduces the ability to take in new information', 'Only affects mood'], a: 2 }] }
+];
+
+const SOURCES = [
+  { id: 'kwik-sb', g: 'Memory and learning courses', short: 'Jim Kwik, Superbrain', title: 'Superbrain (30-day quest)', by: 'Jim Kwik · Mindvalley', kind: 'Video and audio course' },
+  { id: 'gms', g: 'Memory and learning courses', short: 'GMS, School of Phenomenal Memory', title: 'Giordano Memorization System: GMS Manual, GMS Book and Lessons 1–59', by: 'Vladimir A. Kozarenko · English edition by Ruslans Mescerjakovs, School of Phenomenal Memory (Pmemory.com)', kind: 'Manual, course lessons, figurative-codes handbook and articles' },
+  { id: 'gms-cards', g: 'Memory and learning courses', short: 'Memory Experts\' Tools: Playing Cards', title: 'Memory Experts\' Tools: Memorize Playing Cards like a Pro', by: 'Online course (instructor not named in the files)', kind: 'Video course with subtitles' },
+  { id: 'mm', g: 'Memory and learning courses', short: 'Memory Improvement & Learning MasterClass', title: 'The Memory Improvement and Learning MasterClass for Success', by: 'Audio course (instructor not named in the files)', kind: 'Audio course' },
+  { id: 'alb', g: 'Memory and learning courses', short: 'Accelerated Learning Blueprint', title: 'Accelerated Learning Blueprint: ChatGPT and Neurohacking', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'sy', g: 'Memory and learning courses', short: 'Scott H. Young, Learning on Steroids', title: 'Learning on Steroids: implementation guides and video guides', by: 'Scott H. Young', kind: 'Twelve-month program of PDF guides and videos' },
+  { id: 'anki', g: 'Memory and learning courses', short: 'Study for Exams with Anki Flashcards', title: 'Study for Exams with Anki Flashcards', by: 'Jamie (UK medical student) · Skillshare class', kind: 'Video course' },
+  { id: 'llg', g: 'Speed reading', short: 'Learn Like a Genius', title: 'Learn Like a Genius: Speed Reading & Memorizing 3–4x Faster', by: 'Course by @wabyilmaz', kind: 'Audio course and workbook' },
+  { id: 'kwik-sr', g: 'Speed reading', short: 'Jim Kwik, Speed-Reading Crash Course', title: 'Speed-Reading Crash Course', by: 'Jim Kwik', kind: 'Video course' },
+  { id: 'sr-comp', g: 'Speed reading', short: 'Speed Reading and Comprehension Improvement Course', title: 'Speed Reading and Comprehension Improvement Course', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'sr-deep', g: 'Speed reading', short: 'Speed Reading and Deeper Comprehension', title: 'Speed Reading and Deeper Comprehension', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'kk', g: 'Speed reading', short: 'Kam Knight, Speed Reading', title: 'Speed Reading', by: 'Kam Knight', kind: 'Book' },
+  { id: 'benj', g: 'Mental math', short: 'Arthur Benjamin, Secrets of Mental Math', title: 'Secrets of Mental Math', by: 'Professor Arthur T. Benjamin · The Great Courses', kind: 'Video lecture series' },
+  { id: 'mmm', g: 'Mental math', short: 'Mental Math Master Class', title: 'Mental Math Master Class: Shortcuts for Mathematics Success', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'mmc', g: 'Mental math', short: 'Mental Math Secrets', title: 'Mental Math Secrets', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'vedic', g: 'Mental math', short: 'Speed Math Tricks (Vedic)', title: 'Speed Math Tricks: A Success Mantra for Beginners (Vedic mathematics)', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'smart', g: 'Mental math', short: 'Smart Math / Vedic Maths', title: 'Smart Math, Speed Math, Mental Math, Vedic Maths', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'easycal', g: 'Mental math', short: 'EasyCal Fast Math Tricks', title: 'EasyCal Series of 30 Fast Math Tricks (Vedic Mathematics)', by: 'EasyCal', kind: 'Video series' },
+  { id: 'hcm', g: 'Mental math', short: 'Become a Human Calculating Machine', title: 'Become a Human Calculating Machine by Performing Mental Math', by: 'Online course (instructor not named in the files)', kind: 'Video course' },
+  { id: 'tables', g: 'Mental math', short: 'Multiplication Tables up to 10000', title: 'Learn Multiplication Tables up to 10000 in Just 3 Days', by: 'Online course (instructor not named in the files)', kind: 'Video course with worksheets' },
+  { id: 'lfmm', g: 'Mental math', short: 'Learn Lightning Fast Mental Maths', title: 'Learn Lightning Fast Mental Maths', by: 'Online course (instructor not named in the files)', kind: 'Video course' }
+];
+
+'use strict';
+/* ================= DRILLS ================= */
+const WORDS = 'anchor,apple,arrow,balloon,banana,barrel,basket,bell,bicycle,blanket,boat,bottle,bridge,broom,bucket,butterfly,button,cactus,camel,camera,candle,cannon,carpet,carrot,castle,chain,cheese,cherry,chimney,clock,cloud,compass,cookie,crown,curtain,diamond,dolphin,donkey,dragon,drum,eagle,elephant,envelope,feather,fence,flag,flute,fountain,fork,giraffe,glove,guitar,hammer,hammock,helmet,honey,hook,igloo,island,jacket,jar,kettle,key,kite,ladder,lantern,lemon,lighthouse,lizard,magnet,mailbox,mirror,monkey,moon,mountain,mushroom,necklace,nest,octopus,onion,owl,paintbrush,pancake,parrot,peacock,pencil,penguin,piano,pillow,pirate,pizza,pumpkin,rabbit,rainbow,ribbon,robot,rocket,saddle,sandwich,scarf,scissors,shark,shovel,skateboard,snail,snowman,spider,spoon,statue,suitcase,sunflower,sword,teapot,telescope,tent,tiger,toaster,tomato,tractor,trumpet,turtle,umbrella,violin,volcano,wagon,waterfall,whale,wheel,whistle,windmill,wizard,zebra,zipper'.split(',');
+const NAMES = 'Amara,Bruno,Chloé,Dario,Elena,Farid,Greta,Hugo,Ingrid,Jamal,Keiko,Luca,Maya,Nadia,Oscar,Priya,Quentin,Rosa,Samir,Tessa,Ulrich,Vera,Wendell,Ximena,Yusuf,Zara,Anton,Bianca,Cedric,Dalia,Emil,Fiona,Gustav,Hana,Ivan,Jade,Kofi,Leila,Marco,Nora,Omar,Petra,Rafael,Sofia,Tomas,Uma,Viktor,Willa,Yara,Zane'.split(',');
+const SURNAMES = 'Abbott,Baker,Castillo,Dubois,Eriksen,Fontaine,Garcia,Hoffman,Ivanov,Jensen,Kowalski,Laurent,Moreau,Novak,Okafor,Petit,Quinn,Rossi,Silva,Tanaka,Underwood,Vargas,Weber,Young,Zimmer'.split(',');
+const MAJOR = { 0: 's, z', 1: 't, d', 2: 'n', 3: 'm', 4: 'r', 5: 'l', 6: 'j, sh, ch', 7: 'k, hard g', 8: 'f, v', 9: 'p, b' };
+const GMS = { 1: 'N', 2: 'T, H, Z', 3: 'B', 4: 'W, V, K', 5: 'F, R', 6: 'J, P, X', 7: 'S, D', 8: 'G, Q, L', 9: 'C', 0: 'M' };
+const MAJOR_PEGS = 'sauce,suit,sun,sumo,sari,seal,sash,sock,sofa,soap,dice,toad,tuna,dime,tire,doll,dish,duck,dove,tape,nose,net,nun,gnome,Nero,nail,notch,neck,knife,knob,mouse,mat,moon,mummy,mower,mule,match,mug,movie,map,rose,rat,rain,ram,rower,rail,roach,rock,roof,rope,lace,lid,lion,lime,lure,lily,leech,log,lava,lip,cheese,jet,chain,jam,chair,jail,judge,chalk,chef,ship,case,cat,can,comb,car,coal,cage,cake,cave,cab,vase,foot,fan,foam,fire,file,fish,fog,fife,fob,bus,bat,pen,bomb,bear,bell,peach,book,beef,pipe'.split(',');
+const PEGLISTS = {
+  sun: { name: 'Sun list (1–10)', by: 'Jim Kwik, Superbrain', items: ['Sun', 'Socks (a pair)', 'Traffic light', 'Car doors', 'Star (5 points)', 'Six-pack of soda', 'Rainbow (7 colours)', 'Octopus', 'Cat (9 lives)', 'Toes'] },
+  body: { name: 'Body list (top to toe)', by: 'Jim Kwik, Superbrain', items: ['Top of head', 'Nose', 'Mouth', 'Ears', 'Larynx (throat)', 'Shoulders', 'Collar', 'Fingers', 'Belly', 'Seat'] },
+  rhyme: { name: 'Rhyme pegs (1–10)', by: 'classic peg system', items: ['Bun', 'Shoe', 'Tree', 'Door', 'Hive', 'Sticks', 'Heaven', 'Gate', 'Vine', 'Hen'] }
+};
+function codeMap() { return S.set.code === 'gms' ? GMS : MAJOR; }
+function pegFor(n) { const k = String(n).padStart(2, '0'); const key = S.set.code + ':' + k; if (S.pegs[key]) return S.pegs[key]; return S.set.code === 'major' ? MAJOR_PEGS[n] : ''; }
+
+const DRILLS = [];
+function drill(d) { d.fmt = d.fmt || (v => v + (d.unit ? ' ' + d.unit : '')); DRILLS.push(d); }
+function getDrill(id) { return DRILLS.find(d => d.id === id.split(':')[0]); }
+function openDrill(id, opt) { const d = getDrill(id); go(w => d.run(w, opt || {}), d.name); }
+function intro(w, d, controls, startLabel, onStart) {
+  w.append(el('div', { class: 'card' }, el('h2', null, d.name), el('p', null, d.desc), d.how ? el('p', { class: 'muted small' }, d.how) : null,
+    controls ? el('div', { class: 'field-row' }, controls) : null,
+    el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: onStart }, startLabel || 'Start'))));
+  const b = bestFor(d.id, d.higher !== false);
+  if (b != null) w.append(el('p', { class: 'muted small' }, 'Your best so far: ' + d.fmt(b) + ' · ' + scoresFor(d.id).length + ' sessions'));
+}
+function clear(w) { runCleanups(); w.innerHTML = ''; }
+
+/* ---- 1. Number Run ---- */
+drill({
+  id: 'numrun', name: 'Number Run', track: 'memory', unit: 'pairs', icon: '47',
+  desc: 'Two-digit numbers appear one at a time. Turn each into its image, link it to the previous one or place it on a route, then type the whole sequence back.',
+  how: 'Six seconds per number is the standard set in the GMS Manual for trained students. An untrained person recalls about 5 of 20.',
+  run(w, o) {
+    let n = o.n || 10, sec = o.sec || 6;
+    const start = () => {
+      const seq = Array.from({ length: n }, () => String(rnd(100)).padStart(2, '0')); let i = 0;
+      clear(w); const big = el('div', { class: 'big' }, seq[0]); const cnt = el('p', { class: 'muted small' }, '1 of ' + n);
+      w.append(el('div', { class: 'stage' }, el('div', null, big, cnt)), el('button', { class: 'btn', onclick: () => step() }, 'Next number'));
+      let t; const step = () => { clearTimeout(t); i++; if (i >= n) return recall(); big.textContent = seq[i]; cnt.textContent = (i + 1) + ' of ' + n; t = setTimeout(step, sec * 1000); };
+      t = setTimeout(step, sec * 1000); onLeave(() => clearTimeout(t));
+      const recall = () => {
+        clear(w); const ta = el('textarea', { id: 'numrun-in', inputmode: 'numeric', placeholder: 'Type the numbers in order, e.g. 47 03 91 …' });
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Recall'), el('p', { class: 'muted small' }, 'Type all ' + n + ' numbers in order. Spaces are optional.'), ta,
+          el('button', { class: 'btn primary', onclick: () => {
+            const digits = ta.value.replace(/\D/g, ''); const got = []; for (let k = 0; k < n; k++) got.push(digits.substr(k * 2, 2));
+            const ok = seq.filter((s, k) => s === got[k]).length; logScore('numrun', ok, n + ' numbers at ' + sec + 's');
+            clear(w); w.append(resultCard(this, 'numrun', ok, ok + ' of ' + n + ' correct',
+              el('div', { class: 'chips' }, seq.map((s, k) => el('span', { class: 'chip ' + (s === got[k] ? 'ok' : 'no'), title: 'You typed ' + (got[k] || 'nothing') }, s))), start));
+          } }, 'Check')));
+        ta.focus();
+      };
+    };
+    intro(w, this, [select('nr-n', 'How many numbers', [10, 20, 30, 40, 60], n, v => n = +v), select('nr-s', 'Seconds each', [[8, '8 (learning)'], [6, '6 (standard)'], [4, '4'], [3, '3'], [2, '2 (fast)']], sec, v => sec = +v)], 'Start', start);
+  }
+});
+
+/* ---- 2. Chain Link (word lists) ---- */
+drill({
+  id: 'chain', name: 'Chain Link', track: 'memory', unit: 'words', icon: 'a→b',
+  desc: 'Memorise a list of random objects in order by linking each one to the next with a vivid, moving picture.',
+  how: 'Link only two images at a time. Make them large, in contact, and doing something to each other.',
+  run(w, o) {
+    let n = o.n || 10;
+    const start = () => {
+      const seq = sample(WORDS, n); let left = n * 6; clear(w);
+      const tm = el('span', { class: 'timer' }, fmtT(left));
+      w.append(el('div', { class: 'card' }, el('div', { class: 'row between' }, el('h3', null, 'Study the list'), tm),
+        el('ol', { class: 'steps' }, seq.map(s => el('li', null, s))), el('button', { class: 'btn primary', onclick: () => recall() }, 'I have it')));
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) recall(); });
+      const t0 = Date.now();
+      const recall = () => {
+        stop(); const used = Math.round((Date.now() - t0) / 1000); clear(w);
+        const ta = el('textarea', { id: 'chain-in', placeholder: 'One word per line, in order' });
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Recall in order'), ta, el('button', { class: 'btn primary', onclick: () => {
+          const got = ta.value.split(/[\n,]+/).map(norm).filter(Boolean); const ok = seq.filter((s, k) => norm(s) === got[k]).length;
+          logScore('chain', ok, n + ' words, ' + used + 's study'); clear(w);
+          w.append(resultCard(this, 'chain', ok, ok + ' of ' + n + ' in the right place', el('div', { class: 'chips' }, seq.map((s, k) => el('span', { class: 'chip ' + (norm(s) === got[k] ? 'ok' : 'no') }, s))), start));
+        } }, 'Check')));
+        ta.focus();
+      };
+    };
+    intro(w, this, [select('ch-n', 'List length', [10, 15, 20, 30, 40], n, v => n = +v)], 'Start', start);
+  }
+});
+
+/* ---- 3. Number Code ---- */
+drill({
+  id: 'codes', name: 'Number Code', track: 'memory', unit: 'correct in 60s', icon: '0→S',
+  desc: 'Drill the digit-to-sound code until it is a reflex, then drill your 100 images for 00–99.',
+  how: 'Choose the Major system (used by Jim Kwik and most memory athletes) or the GMS code (School of Phenomenal Memory) in More → Settings.',
+  run(w) {
+    const self = this; const map = codeMap(); const sysName = S.set.code === 'gms' ? 'GMS code' : 'Major system';
+    const table = () => el('div', { class: 'scroll-x' }, el('table', null, el('tbody', null, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => el('tr', null, el('th', null, d), el('td', null, map[d]))))));
+    const sprint = () => {
+      clear(w); let score = 0, left = 60, cur; const tm = el('span', { class: 'timer' }, '1:00'); const big = el('div', { class: 'big' }); const opts = el('div', { class: 'grid' }); const sc = el('span', { class: 'pill' }, '0');
+      const next = () => {
+        cur = rnd(10); const rev = Math.random() < .4; opts.innerHTML = '';
+        if (!rev) { big.textContent = cur; shuffle([cur, ...sample([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(x => x !== cur), 3)]).forEach(d => opts.append(el('button', { class: 'btn', onclick: () => ans(d === cur) }, map[d]))); }
+        else { big.textContent = map[cur]; shuffle([cur, ...sample([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(x => x !== cur), 3)]).forEach(d => opts.append(el('button', { class: 'btn', onclick: () => ans(d === cur) }, d))); }
+      };
+      const ans = ok => { if (ok) score++; else left = Math.max(0, left - 2); sc.textContent = score; next(); };
+      w.append(el('div', { class: 'row between' }, tm, sc), el('div', { class: 'stage' }, big), opts); next();
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) { stop(); logScore('codes', score, sysName); clear(w); w.append(resultCard(self, 'codes', score, score + ' correct in 60 seconds', el('p', { class: 'muted small' }, 'A wrong answer costs 2 seconds. Aim for 40+ before moving on to images.'), sprint)); } });
+    };
+    const images = () => {
+      clear(w); const order = shuffle(Array.from({ length: 100 }, (_, i) => i)).slice(0, 20); let i = 0, known = 0; const t0 = Date.now();
+      const big = el('div', { class: 'big' }); const ans = el('p', { class: 'muted' }); const btns = el('div', { class: 'row' });
+      const show = () => {
+        if (i >= order.length) { const per = ((Date.now() - t0) / 1000 / order.length).toFixed(1); touchDay(); save(); clear(w); w.append(el('div', { class: 'card next' }, el('h3', null, 'Image check'), el('div', { class: 'stat' }, el('b', null, known + ' of 20 instant'), el('span', { class: 'muted small' }, per + ' seconds per number on average. Under 1 second each is reflex level.')), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: images }, 'Another 20'), el('button', { class: 'btn', onclick: back }, 'Done')))); return; }
+        const n = order[i]; big.textContent = String(n).padStart(2, '0'); ans.textContent = ''; btns.innerHTML = '';
+        btns.append(el('button', { class: 'btn primary', onclick: () => {
+          const p = pegFor(n); ans.textContent = p ? p : 'No image saved yet. Sounds: ' + String(n).padStart(2, '0').split('').map(d => map[d]).join(' + '); btns.innerHTML = '';
+          btns.append(el('button', { class: 'btn', onclick: () => { known++; i++; show(); } }, 'Knew it instantly'), el('button', { class: 'btn', onclick: () => { i++; show(); } }, 'Too slow'));
+        } }, 'Show image'));
+      };
+      w.append(el('div', { class: 'stage' }, el('div', null, big, ans)), btns); show();
+    };
+    const editor = () => {
+      clear(w); w.append(el('div', { class: 'card' }, el('h3', null, 'My 100 images (' + sysName + ')'), el('p', { class: 'muted small' }, 'An image you chose yourself sticks better than one you were given. Change any word; it saves as you type.'),
+        el('div', { class: 'grid' }, Array.from({ length: 100 }, (_, n) => { const k = String(n).padStart(2, '0'); return el('label', { for: 'peg' + k }, k + ' · ' + k.split('').map(d => map[d].split(',')[0]).join('-'), el('input', { type: 'text', id: 'peg' + k, value: pegFor(n), oninput: e => { S.pegs[S.set.code + ':' + k] = e.target.value; save(); } })); })),
+        el('button', { class: 'btn', onclick: () => { clear(w); self.run(w); } }, 'Back to Number Code')));
+    };
+    w.append(el('div', { class: 'card' }, el('h2', null, this.name), el('p', null, this.desc), el('p', { class: 'muted small' }, this.how), el('h3', null, sysName), table(),
+      el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: sprint }, 'Sounds sprint (60s)'), el('button', { class: 'btn', onclick: images }, 'Image check (20 numbers)'), el('button', { class: 'btn', onclick: editor }, 'Edit my 100 images'))));
+    const b = bestFor('codes'); if (b != null) w.append(el('p', { class: 'muted small' }, 'Best sprint: ' + b + ' correct'));
+  }
+});
+
+/* ---- 4. Peg Lists ---- */
+drill({
+  id: 'pegs', name: 'Peg Lists', track: 'memory', unit: 'of 10', icon: '1·2·3',
+  desc: 'Learn a fixed list of ten pegs, then hang ten random items on them and recall any item by its number.',
+  how: 'Pegs give you random access: you can answer "what was number 7?" without running through the whole chain.',
+  run(w, o) {
+    let key = o.list || 'sun';
+    const learn = () => {
+      const L = PEGLISTS[key]; clear(w);
+      w.append(el('div', { class: 'card' }, el('h3', null, L.name), el('p', { class: 'muted small' }, 'From: ' + L.by), el('ol', { class: 'steps' }, L.items.map(x => el('li', null, x))),
+        el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: test }, 'Use the pegs'), el('button', { class: 'btn', onclick: quiz }, 'Quiz me on the pegs'))));
+    };
+    const quiz = () => {
+      const L = PEGLISTS[key]; clear(w); const order = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]); let i = 0, ok = 0; const big = el('div', { class: 'big' }); const opts = el('div', { class: 'grid' });
+      const next = () => { if (i >= 10) { clear(w); w.append(el('div', { class: 'card next' }, el('h3', null, ok + ' of 10 pegs correct'), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: test }, 'Use the pegs'), el('button', { class: 'btn', onclick: quiz }, 'Quiz again')))); return; }
+        const n = order[i]; big.textContent = n + 1; opts.innerHTML = ''; shuffle([n, ...sample(order.filter(x => x !== n), 3)]).forEach(x => opts.append(el('button', { class: 'btn', onclick: () => { if (x === n) ok++; i++; next(); } }, L.items[x]))); };
+      w.append(el('div', { class: 'stage' }, big), opts); next();
+    };
+    const test = () => {
+      const L = PEGLISTS[key]; const items = sample(WORDS, 10); clear(w); let left = 90; const tm = el('span', { class: 'timer' }, fmtT(left));
+      w.append(el('div', { class: 'card' }, el('div', { class: 'row between' }, el('h3', null, 'Attach each item to its peg'), tm),
+        el('div', { class: 'scroll-x' }, el('table', null, el('tbody', null, items.map((x, k) => el('tr', null, el('th', null, k + 1), el('td', { class: 'muted' }, L.items[k]), el('td', null, el('b', null, x))))))),
+        el('button', { class: 'btn primary', onclick: () => recall() }, 'I have it')));
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) recall(); });
+      const recall = () => {
+        stop(); clear(w); const order = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]); const inputs = {};
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Recall by number (random order)'), el('div', { class: 'field-row' }, order.map(k => el('label', { for: 'pg' + k }, 'Number ' + (k + 1), inputs[k] = el('input', { type: 'text', id: 'pg' + k, autocomplete: 'off' })))),
+          el('button', { class: 'btn primary', onclick: () => { const res = items.map((x, k) => norm(inputs[k].value) === norm(x)); const ok = res.filter(Boolean).length; logScore('pegs', ok, L.name); clear(w);
+            w.append(resultCard(this, 'pegs', ok, ok + ' of 10', el('div', { class: 'chips' }, items.map((x, k) => el('span', { class: 'chip ' + (res[k] ? 'ok' : 'no') }, (k + 1) + ' ' + x))), test)); } }, 'Check')));
+      };
+    };
+    intro(w, this, [select('pg-l', 'Peg list', Object.keys(PEGLISTS).map(k => [k, PEGLISTS[k].name]), key, v => key = v)], 'Learn the list', learn);
+  }
+});
+
+/* ---- 5. Names & Faces ---- */
+function faceSVG(f) {
+  const skin = ['#F6D7BD', '#EBC0A0', '#D6A17C', '#B5774F', '#8A5536', '#5E3A24'][f.skin], hair = ['#1E1A17', '#4A2F1B', '#8B5A2B', '#C9A14A', '#B7B7B7', '#A33B1F'][f.hairC];
+  const rx = [34, 30, 36][f.shape], ry = [40, 44, 38][f.shape];
+  let s = `<svg viewBox="0 0 100 100" role="img" aria-label="Face"><rect width="100" height="100" rx="14" fill="${['#DDF1EF', '#FFE9A8', '#E3E6F5', '#F8E1DF'][f.bg]}"/>`;
+  if (f.hair === 2) s += `<path d="M${50 - rx - 6} 52 Q${50 - rx - 8} 8 50 8 Q${50 + rx + 8} 8 ${50 + rx + 6} 52 L${50 + rx + 4} 92 L${50 - rx - 4} 92 Z" fill="${hair}"/>`;
+  if (f.hair === 4) s += `<circle cx="50" cy="8" r="9" fill="${hair}"/>`;
+  s += `<ellipse cx="50" cy="54" rx="${rx}" ry="${ry}" fill="${skin}"/><ellipse cx="${50 - rx}" cy="56" rx="4" ry="7" fill="${skin}"/><ellipse cx="${50 + rx}" cy="56" rx="4" ry="7" fill="${skin}"/>`;
+  if (f.hair === 1 || f.hair === 2 || f.hair === 4) s += `<path d="M${50 - rx} 44 Q${50 - rx} 10 50 12 Q${50 + rx} 10 ${50 + rx} 44 Q${50 + rx - 10} 24 50 26 Q${50 - rx + 10} 24 ${50 - rx} 44 Z" fill="${hair}"/>`;
+  if (f.hair === 3) for (let i = 0; i < 9; i++) s += `<circle cx="${50 - rx + 2 + i * (rx * 2 - 4) / 8}" cy="${22 - Math.sin(i / 8 * Math.PI) * 10}" r="9" fill="${hair}"/>`;
+  if (f.hair === 5) s += `<path d="M${50 - rx} 40 Q50 -6 ${50 + rx} 40 Q${50 + 6} 30 ${50 - rx + 8} 18 Z" fill="${hair}"/>`;
+  const by = f.brow ? 3.2 : 1.6; s += `<path d="M34 42 q7 -4 12 0" stroke="${hair}" stroke-width="${by}" fill="none"/><path d="M54 42 q5 -4 12 0" stroke="${hair}" stroke-width="${by}" fill="none"/>`;
+  s += `<circle cx="40" cy="49" r="${f.eyes ? 3.4 : 2.4}" fill="#1b1b1b"/><circle cx="60" cy="49" r="${f.eyes ? 3.4 : 2.4}" fill="#1b1b1b"/>`;
+  if (f.glasses) s += `<circle cx="40" cy="49" r="8" fill="none" stroke="#222" stroke-width="1.8"/><circle cx="60" cy="49" r="8" fill="none" stroke="#222" stroke-width="1.8"/><path d="M48 49h4" stroke="#222" stroke-width="1.8"/>`;
+  s += `<path d="M50 52 q${f.nose ? -6 : -3} ${f.nose ? 12 : 8} 0 ${f.nose ? 13 : 9}" stroke="#00000055" stroke-width="1.6" fill="none"/>`;
+  s += [`<path d="M40 72 q10 8 20 0" stroke="#7a2b2b" stroke-width="2.2" fill="none"/>`, `<path d="M42 73 h16" stroke="#7a2b2b" stroke-width="2.2"/>`, `<path d="M40 70 q10 12 20 0 Z" fill="#fff" stroke="#7a2b2b" stroke-width="1.6"/>`][f.mouth];
+  if (f.beard === 1) s += `<path d="M${50 - rx + 3} 62 Q50 ${54 + ry + 12} ${50 + rx - 3} 62 Q${50 + rx - 8} ${54 + ry - 4} 50 ${54 + ry - 2} Q${50 - rx + 8} ${54 + ry - 4} ${50 - rx + 3} 62 Z" fill="${hair}" opacity=".9"/>`;
+  if (f.beard === 2) s += `<path d="M38 67 q12 -6 24 0 q-12 3 -24 0 Z" fill="${hair}"/>`;
+  if (f.freckles) s += `<g fill="#9c5a3c"><circle cx="33" cy="58" r="1"/><circle cx="37" cy="61" r="1"/><circle cx="30" cy="62" r="1"/><circle cx="67" cy="58" r="1"/><circle cx="63" cy="61" r="1"/><circle cx="70" cy="62" r="1"/></g>`;
+  if (f.ear) s += `<circle cx="${50 - rx - 1}" cy="65" r="2.6" fill="#E0B100"/><circle cx="${50 + rx + 1}" cy="65" r="2.6" fill="#E0B100"/>`;
+  if (f.mole) s += `<circle cx="62" cy="68" r="1.8" fill="#3b2318"/>`;
+  return s + '</svg>';
+}
+function randFace() { return { skin: rnd(6), hairC: rnd(6), shape: rnd(3), bg: rnd(4), hair: rnd(6), brow: rnd(2), eyes: rnd(2), glasses: rnd(4) === 0 ? 1 : 0, nose: rnd(2), mouth: rnd(3), beard: rnd(5) > 2 ? rnd(3) : 0, freckles: rnd(5) === 0 ? 1 : 0, ear: rnd(4) === 0 ? 1 : 0, mole: rnd(6) === 0 ? 1 : 0 }; }
+drill({
+  id: 'names', name: 'Names & Faces', track: 'memory', unit: 'names', icon: 'Hi!',
+  desc: 'Meet a group of strangers. Pick one stand-out feature on each face, turn the name into a picture, and attach the picture to the feature.',
+  how: 'Faces are drawn at random, so the stand-out feature is yours to choose: glasses, eyebrows, a beard, hair, earrings, a mole.',
+  run(w, o) {
+    let n = o.n || 6, full = false;
+    const start = () => {
+      const ppl = sample(NAMES, n).map(nm => ({ name: nm + (full ? ' ' + pick(SURNAMES) : ''), f: randFace() })); clear(w); let left = n * 10; const tm = el('span', { class: 'timer' }, fmtT(left));
+      w.append(el('div', { class: 'row between' }, el('h3', null, 'Meet everyone'), tm), el('div', { class: 'faces' }, ppl.map(p => el('div', { class: 'face' }, el('div', { html: faceSVG(p.f) }), el('b', null, p.name)))), el('button', { class: 'btn primary', onclick: () => recall() }, 'I have them'));
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) recall(); });
+      const recall = () => {
+        stop(); clear(w); const order = shuffle(ppl); const ins = [];
+        w.append(el('h3', null, 'Who is who?'), el('div', { class: 'faces' }, order.map((p, k) => el('div', { class: 'face' }, el('div', { html: faceSVG(p.f) }), ins[k] = el('input', { type: 'text', id: 'nm' + k, autocomplete: 'off', 'aria-label': 'Name for face ' + (k + 1) })))),
+          el('button', { class: 'btn primary', onclick: () => { const res = order.map((p, k) => norm(ins[k].value) === norm(p.name)); const ok = res.filter(Boolean).length; logScore('names', ok, n + ' faces' + (full ? ', full names' : '')); clear(w);
+            w.append(resultCard(this, 'names', ok, ok + ' of ' + n + ' names', el('div', { class: 'faces' }, order.map((p, k) => el('div', { class: 'face' }, el('div', { html: faceSVG(p.f) }), el('b', { class: res[k] ? 'ok' : 'no' }, p.name)))), start)); } }, 'Check'));
+      };
+    };
+    intro(w, this, [select('nf-n', 'People', [4, 6, 9, 12, 16, 20], n, v => n = +v), select('nf-f', 'Names', [[0, 'First names'], [1, 'First and last']], 0, v => full = v === '1')], 'Start', start);
+  }
+});
+
+/* ---- 6. Card Deck ---- */
+const SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+drill({
+  id: 'cards', name: 'Card Deck', track: 'memory', unit: 'cards', icon: 'A♠',
+  desc: 'Memorise the order of shuffled playing cards. Give every card a fixed image (person, action or object) and place the images along a route.',
+  how: 'Start with 10 cards. A full deck is 52 images on 52 (or, with a Person-Action-Object system, 18) locations.',
+  run(w, o) {
+    let n = o.n || 10;
+    const start = () => {
+      const deck = shuffle(SUITS.flatMap(s => RANKS.map(r => r + s))).slice(0, n); clear(w); const t0 = Date.now();
+      const pc = (c, extra) => el('button', Object.assign({ class: 'pc' + ('♥♦'.includes(c.slice(-1)) ? ' red' : '') }, extra || {}), c);
+      w.append(el('div', { class: 'card' }, el('h3', null, 'Memorise this order (left to right)'), el('div', { class: 'cardgrid' }, deck.map(c => pc(c, { disabled: true, style: 'opacity:1' }))), el('button', { class: 'btn primary', onclick: () => recall() }, 'I have it')));
+      const recall = () => {
+        const study = Math.round((Date.now() - t0) / 1000); clear(w); let i = 0, ok = 0; const out = el('div', { class: 'chips' }); const info = el('p', { class: 'muted small' }, 'Tap card 1');
+        const grid = el('div', { class: 'cardgrid' }, shuffle(deck).map(c => pc(c, { onclick: e => { if (e.target.classList.contains('used')) return; const right = deck[i] === c; if (right) ok++; out.append(el('span', { class: 'chip ' + (right ? 'ok' : 'no') }, right ? c : c + '→' + deck[i])); const btn = [...grid.children].find(b => b.textContent === deck[i]); (right ? e.target : btn).classList.add('used'); i++; info.textContent = i < n ? 'Tap card ' + (i + 1) : ''; if (i >= n) { logScore('cards', ok, n + ' cards, ' + study + 's study'); clear(w); w.append(resultCard(this, 'cards', ok, ok + ' of ' + n + ' cards', el('p', { class: 'muted small' }, 'Study time: ' + fmtT(study)), start)); } } })));
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Rebuild the order'), info, grid, out));
+      };
+    };
+    intro(w, this, [select('cd-n', 'Cards', [5, 10, 15, 20, 26, 52], n, v => n = +v)], 'Deal', start);
+  }
+});
+
+/* ---- 7. Memory Palace ---- */
+drill({
+  id: 'palace', name: 'Memory Palace', track: 'memory', unit: 'items', icon: 'route',
+  desc: 'Build routes through places you know, then use them to store a list. Each stop on the route holds one image.',
+  how: 'Walk the route in a fixed direction. Choose stops that are distinct and well lit, about ten per room or street.',
+  run(w) {
+    const self = this;
+    const home = () => {
+      clear(w); w.append(el('div', { class: 'card' }, el('h2', null, self.name), el('p', null, self.desc), el('p', { class: 'muted small' }, self.how),
+        el('div', { class: 'list' }, S.palaces.map((p, i) => el('div', { class: 'item', style: 'cursor:default' }, el('span', { class: 't' }, el('b', null, p.name), el('div', { class: 'muted small' }, p.loci.length + ' stops')), el('button', { class: 'btn sm primary', onclick: () => practise(p) }, 'Practise'), el('button', { class: 'btn sm', onclick: () => edit(i) }, 'Edit')))),
+        el('button', { class: 'btn', onclick: () => edit(-1) }, 'Add a new route')));
+      const b = bestFor('palace'); if (b != null) w.append(el('p', { class: 'muted small' }, 'Best: ' + b + ' items'));
+    };
+    const edit = i => {
+      clear(w); const p = i >= 0 ? S.palaces[i] : { name: '', loci: [] };
+      const nm = el('input', { type: 'text', id: 'pl-name', value: p.name, placeholder: 'e.g. My flat, walk to the gym' }); const ta = el('textarea', { id: 'pl-loci', placeholder: 'One stop per line, in walking order' }); ta.value = p.loci.join('\n');
+      w.append(el('div', { class: 'card' }, el('h3', null, i >= 0 ? 'Edit route' : 'New route'), el('label', { for: 'pl-name' }, 'Name', nm), el('label', { for: 'pl-loci' }, 'Stops', ta),
+        el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: () => { const loci = ta.value.split('\n').map(s => s.trim()).filter(Boolean); if (!nm.value.trim() || loci.length < 3) { nm.focus(); return; } const np = { name: nm.value.trim(), loci }; if (i >= 0) S.palaces[i] = np; else S.palaces.push(np); save(); home(); } }, 'Save (3 stops minimum)'),
+          i >= 0 ? el('button', { class: 'btn', onclick: () => { S.palaces.splice(i, 1); save(); home(); } }, 'Delete route') : null, el('button', { class: 'btn', onclick: home }, 'Cancel'))));
+    };
+    const practise = p => {
+      const items = sample(WORDS, p.loci.length); let i = 0; clear(w); const a = el('p', { class: 'muted' }); const b = el('div', { class: 'big' }); const c = el('p', { class: 'muted small' });
+      const show = () => { a.textContent = 'Stop ' + (i + 1) + ': ' + p.loci[i]; b.textContent = items[i]; c.textContent = (i + 1) + ' of ' + items.length; };
+      w.append(el('div', { class: 'stage' }, el('div', null, a, b, c)), el('button', { class: 'btn primary', onclick: () => { i++; if (i >= items.length) recall(); else show(); } }, 'Placed it, next')); show();
+      const recall = () => {
+        clear(w); const ins = [];
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Walk the route again'), el('div', { class: 'field-row' }, p.loci.map((l, k) => el('label', { for: 'pr' + k }, (k + 1) + '. ' + l, ins[k] = el('input', { type: 'text', id: 'pr' + k, autocomplete: 'off' })))),
+          el('button', { class: 'btn primary', onclick: () => { const res = items.map((x, k) => norm(ins[k].value) === norm(x)); const ok = res.filter(Boolean).length; logScore('palace', ok, p.name + ', ' + items.length + ' stops'); clear(w);
+            w.append(resultCard(self, 'palace', ok, ok + ' of ' + items.length + ' items', el('div', { class: 'chips' }, items.map((x, k) => el('span', { class: 'chip ' + (res[k] ? 'ok' : 'no') }, p.loci[k] + ': ' + x))), () => practise(p))); } }, 'Check')));
+      };
+    };
+    home();
+  }
+});
+
+/* ---- 8. Schulte Table ---- */
+drill({
+  id: 'schulte', name: 'Schulte Table', track: 'reading', unit: 's', higher: false, icon: '5×5', fmt: v => v.toFixed(1) + ' s',
+  desc: 'Keep your eyes on the centre square and find the numbers in order using your peripheral vision.',
+  how: 'A wider visual span means more words per glance. Do not let your eyes dart around; let the numbers come to you.',
+  run(w, o) {
+    let size = o.size || 5;
+    const start = () => {
+      clear(w); const N = size * size; const nums = shuffle(Array.from({ length: N }, (_, i) => i + 1)); let next = 1; const t0 = performance.now(); const tm = el('span', { class: 'timer' }, '0.0'); const nx = el('span', { class: 'pill' }, 'Find 1');
+      const stop = timerEvery(100, () => tm.textContent = ((performance.now() - t0) / 1000).toFixed(1));
+      const grid = el('div', { class: 'schulte', style: 'grid-template-columns:repeat(' + size + ',1fr)' }, nums.map(v => el('button', { onclick: e => {
+        if (v === next) { e.target.classList.add('hit'); next++; nx.textContent = next <= N ? 'Find ' + next : 'Done'; if (next > N) { stop(); const t = (performance.now() - t0) / 1000; const id = 'schulte' + (size === 5 ? '' : ':' + size); logScore(id, +t.toFixed(1), size + '×' + size); clear(w); w.append(resultCard(this, id, +t.toFixed(1), t.toFixed(1) + ' seconds', el('p', { class: 'muted small' }, size === 5 ? 'On a 5×5 table, under 30 seconds is solid and under 20 is excellent.' : size + '×' + size + ' table'), start)); } }
+        else { e.target.classList.add('miss'); setTimeout(() => e.target.classList.remove('miss'), 250); }
+      } }, v)));
+      w.append(el('div', { class: 'row between' }, nx, tm), grid);
+    };
+    intro(w, this, [select('sc-n', 'Table size', [[3, '3×3'], [4, '4×4'], [5, '5×5 (standard)'], [6, '6×6'], [7, '7×7']], size, v => size = +v)], 'Start', start);
+  }
+});
+
+/* ---- 9. Reading Speed Test ---- */
+drill({
+  id: 'wpm', name: 'Reading Speed Test', track: 'reading', unit: 'wpm', icon: 'wpm', fmt: v => v + ' effective wpm',
+  desc: 'Read a short passage at your best comfortable speed, then answer four questions. Your score is speed multiplied by comprehension.',
+  how: 'Take a baseline first, then retest every week. Speed without comprehension does not count.',
+  run(w) {
+    const start = () => {
+      const seen = S.notes.wpmSeen || []; let pool = PASSAGES.map((p, i) => i).filter(i => !seen.includes(i)); if (!pool.length) { pool = PASSAGES.map((p, i) => i); S.notes.wpmSeen = []; }
+      const idx = pick(pool); const P = PASSAGES[idx]; (S.notes.wpmSeen = S.notes.wpmSeen || []).push(idx); save();
+      clear(w); const words = P.text.split(/\s+/).length; const t0 = Date.now();
+      w.append(el('div', { class: 'card' }, el('h3', null, P.title), el('div', { class: 'reader' }, P.text.split('\n').map(par => el('p', { style: 'margin-bottom:14px' }, par))), el('button', { class: 'btn primary', onclick: () => {
+        const secs = (Date.now() - t0) / 1000; const wpm = Math.round(words / secs * 60); clear(w); const ans = [];
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Without looking back'), P.qs.map((q, qi) => el('div', { class: 'card', style: 'border-style:dashed' }, el('b', null, q.q), el('div', { class: 'grid two' }, q.o.map((o, oi) => el('button', { class: 'btn', onclick: e => { ans[qi] = oi; [...e.target.parentNode.children].forEach(b => b.classList.remove('teal')); e.target.classList.add('teal'); } }, o))))),
+          el('button', { class: 'btn primary', onclick: () => { const ok = P.qs.filter((q, qi) => ans[qi] === q.a).length; const comp = ok / P.qs.length; const eff = Math.round(wpm * comp); logScore('wpm', eff, wpm + ' wpm × ' + Math.round(comp * 100) + '%'); clear(w);
+            w.append(resultCard(this, 'wpm', eff, eff + ' effective wpm', el('p', null, 'Raw speed ' + wpm + ' wpm, comprehension ' + ok + ' of ' + P.qs.length + '. Typical untrained adult reading is around 200–250 wpm.'), start)); } }, 'See my score')));
+      } }, 'Finished reading')));
+    };
+    intro(w, this, null, 'Start reading', start);
+  }
+});
+
+/* ---- 10. Pacer ---- */
+drill({
+  id: 'pacer', name: 'Pacer & Flash Reader', track: 'reading', unit: 'wpm', icon: 'pace',
+  desc: 'Train your eyes to move forward at a set speed. Guide mode sweeps a highlight through the text like a finger; Flash mode shows word groups in one spot.',
+  how: 'Paste your own text or use a built-in passage. Push the speed 20–30% past comfortable for a few minutes, then drop back and notice that normal now feels slow.',
+  run(w, o) {
+    let wpm = S.notes.pacerWpm || 300, chunk = 3, mode = 'guide', src = '0';
+    const ta = el('textarea', { id: 'pc-text', placeholder: 'Optional: paste any text to practise on' });
+    const start = () => {
+      const text = ta.value.trim() || PASSAGES[+src].text; const words = text.split(/\s+/); clear(w); S.notes.pacerWpm = wpm; save();
+      let i = 0, playing = true; const view = mode === 'flash' ? el('div', { class: 'rsvp stage' }) : el('div', { class: 'reader card' });
+      const spans = mode === 'guide' ? words.map(x => el('span', null, x + ' ')) : null; if (spans) view.append(...spans);
+      const info = el('span', { class: 'timer' }, wpm + ' wpm'); const pp = el('button', { class: 'btn', onclick: () => { playing = !playing; pp.textContent = playing ? 'Pause' : 'Resume'; } }, 'Pause');
+      w.append(el('div', { class: 'row between' }, info, el('div', { class: 'row' }, el('button', { class: 'btn sm', onclick: () => { wpm = Math.max(100, wpm - 25); info.textContent = wpm + ' wpm'; } }, '− 25'), el('button', { class: 'btn sm', onclick: () => { wpm = Math.min(1500, wpm + 25); info.textContent = wpm + ' wpm'; } }, '+ 25'), pp)), view);
+      let t; const tick = () => {
+        if (playing) {
+          if (i >= words.length) { logScore('pacer', wpm, words.length + ' words, ' + mode); S.notes.pacerWpm = wpm; save(); clear(w); w.append(resultCard(this, 'pacer', wpm, 'Finished at ' + wpm + ' wpm', el('p', { class: 'muted small' }, 'Can you say in one sentence what the text was about? If not, drop 50 wpm.'), start)); return; }
+          if (mode === 'flash') view.textContent = words.slice(i, i + chunk).join(' ');
+          else { spans.forEach((s, k) => { if (k >= i - chunk && k < i) s.style.background = ''; }); for (let k = i; k < Math.min(i + chunk, words.length); k++) { spans[k].style.background = 'var(--hi)'; spans[k].style.color = 'var(--hi-ink)'; } spans.forEach((s, k) => { if (k < i) { s.style.background = ''; s.style.color = ''; } }); const sp = spans[i]; if (sp && sp.scrollIntoView) sp.scrollIntoView({ block: 'center' }); }
+          i += chunk;
+        }
+        t = setTimeout(tick, 60000 / wpm * chunk);
+      };
+      tick(); onLeave(() => clearTimeout(t));
+    };
+    w.append(el('div', { class: 'card' }, el('h2', null, this.name), el('p', null, this.desc), el('p', { class: 'muted small' }, this.how),
+      el('div', { class: 'field-row' }, select('pc-m', 'Mode', [['guide', 'Guide (moving highlight)'], ['flash', 'Flash (one spot)']], mode, v => mode = v), select('pc-w', 'Speed', [150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000].map(x => [x, x + ' wpm']), [150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000].reduce((a, b) => Math.abs(b - wpm) < Math.abs(a - wpm) ? b : a), v => wpm = +v), select('pc-c', 'Words per group', [1, 2, 3, 4, 5], chunk, v => chunk = +v), select('pc-s', 'Built-in text', PASSAGES.map((p, i) => [i, p.title]), 0, v => src = v)),
+      el('label', { for: 'pc-text' }, 'Your own text', ta), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: start }, 'Start'))));
+  }
+});
+
+/* ---- 11. Eye Span ---- */
+drill({
+  id: 'span', name: 'Eye Span', track: 'reading', unit: 'characters', icon: 'span',
+  desc: 'A row of characters flashes for a fraction of a second. Fix your eyes on the centre dot and take in the whole row in one glance.',
+  how: 'Right answer: the row gets wider. Wrong answer: it narrows. Your score is the widest row you read correctly.',
+  run(w, o) {
+    let ms = 400, kind = 'digits';
+    const start = () => {
+      clear(w); let width = 4, round = 0, best = 0; const stage = el('div', { class: 'big', style: 'letter-spacing:.25em' }, '•'); const inp = el('input', { type: 'text', id: 'sp-in', autocomplete: 'off', autocapitalize: 'characters' }); const info = el('p', { class: 'muted small' }); let cur = '';
+      const flash = () => { round++; if (round > 12) { logScore('span', best, ms + ' ms, ' + kind); clear(w); w.append(resultCard(this, 'span', best, best + ' characters in one glance', null, start)); return; }
+        info.textContent = 'Round ' + round + ' of 12 · width ' + width; inp.value = ''; inp.disabled = true; stage.textContent = '•';
+        after(700, () => { const pool = kind === 'digits' ? '0123456789' : 'ABCDEFGHJKLMNPRSTUVWXYZ'; cur = Array.from({ length: width }, () => pool[rnd(pool.length)]).join(''); stage.textContent = cur; after(ms, () => { stage.textContent = '•'; inp.disabled = false; inp.focus(); }); }); };
+      const submit = () => { if (inp.disabled) return; const ok = inp.value.replace(/\s/g, '').toUpperCase() === cur; if (ok) { best = Math.max(best, width); width++; } else width = Math.max(3, width - 1); stage.textContent = ok ? '✓' : cur; inp.disabled = true; after(ok ? 350 : 1100, flash); };
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      w.append(info, el('div', { class: 'stage' }, stage), el('div', { class: 'row' }, inp, el('button', { class: 'btn primary', onclick: submit }, 'Enter'))); flash();
+    };
+    intro(w, this, [select('sp-ms', 'Flash time', [[700, '0.7 s'], [400, '0.4 s'], [250, '0.25 s'], [150, '0.15 s']], ms, v => ms = +v), select('sp-k', 'Characters', [['digits', 'Digits'], ['letters', 'Letters']], kind, v => kind = v)], 'Start', start);
+  }
+});
+
+/* ---- 12. Mental Math ---- */
+const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MATH = [
+  { k: 'add2', n: 'Add 2-digit numbers', hint: 'Work left to right: add the tens first, then the ones. 47 + 38 → 47 + 30 = 77, + 8 = 85.', g: () => { const a = ri(11, 99), b = ri(11, 99); return [a + ' + ' + b, a + b]; } },
+  { k: 'add3', n: 'Add 3-digit numbers', hint: 'Left to right, one place at a time, saying the running total: 538 + 327 → 838, 858, 865.', g: () => { const a = ri(101, 999), b = ri(101, 999); return [a + ' + ' + b, a + b]; } },
+  { k: 'sub2', n: 'Subtract 2-digit numbers', hint: 'Subtract too much, then add back: 81 − 37 → 81 − 40 = 41, + 3 = 44.', g: () => { const a = ri(30, 99), b = ri(11, a - 1); return [a + ' − ' + b, a - b]; } },
+  { k: 'sub3', n: 'Subtract 3-digit numbers', hint: 'Round the second number up, subtract, add back the complement: 725 − 468 → 725 − 500 = 225, + 32 = 257.', g: () => { const a = ri(300, 999), b = ri(101, a - 1); return [a + ' − ' + b, a - b]; } },
+  { k: 'comp', n: 'Complements to 100 and 1000', hint: 'All digits from 9, the last from 10: for 1000 − 468 → 9−4=5, 9−6=3, 10−8=2 → 532.', g: () => { if (rnd(2)) { const a = ri(11, 99); return ['100 − ' + a, 100 - a]; } const a = ri(101, 999); return ['1000 − ' + a, 1000 - a]; } },
+  { k: 'dbl', n: 'Double and halve', hint: 'Double left to right: 2 × 78 → 140 + 16 = 156. Halve by splitting: 174 → 100/2 + 74/2 = 50 + 37.', g: () => { if (rnd(2)) { const a = ri(26, 499); return ['2 × ' + a, 2 * a]; } const a = 2 * ri(13, 499); return [a + ' ÷ 2', a / 2]; } },
+  { k: 'x1', n: '2-digit × 1-digit', hint: 'Left to right: 7 × 46 → 7 × 40 = 280, + 7 × 6 = 42 → 322.', g: () => { const a = ri(12, 99), b = ri(3, 9); return [a + ' × ' + b, a * b]; } },
+  { k: 'x11', n: 'Multiply by 11', hint: 'Add the two digits and put the sum in the middle: 53 × 11 → 5 (5+3) 3 = 583. If the sum is over 9, carry: 87 × 11 → 8 (15) 7 = 957.', g: () => { const a = ri(12, 99); return [a + ' × 11', a * 11]; } },
+  { k: 'sq5', n: 'Squares ending in 5', hint: 'Multiply the first digit by the next number up, then attach 25: 65² → 6 × 7 = 42 → 4225.', g: () => { const a = ri(1, 12) * 10 + 5; return [a + '²', a * a]; } },
+  { k: 'sq2', n: 'Square any 2-digit number', hint: 'Go up and down to a round number, multiply, add the square of the distance: 43² → 40 × 46 = 1840, + 3² = 1849.', g: () => { const a = ri(11, 99); return [a + '²', a * a]; } },
+  { k: 'near100', n: 'Multiply numbers near 100', hint: 'Take the distances from 100. 96 × 93: distances 4 and 7. 96 − 7 = 89, then 4 × 7 = 28 → 8928. Above 100, add instead: 104 × 107 → 111 | 28 → 11128.', g: () => { const a = ri(88, 112), b = ri(88, 112); return [a + ' × ' + b, a * b]; } },
+  { k: 'same10', n: 'Same tens, ones add to 10', hint: 'Like squares ending in 5: first digit × next number up, then the ones multiplied: 73 × 77 → 7 × 8 = 56, 3 × 7 = 21 → 5621.', g: () => { const t = ri(1, 9), u = ri(1, 9); return [(t * 10 + u) + ' × ' + (t * 10 + 10 - u), (t * 10 + u) * (t * 10 + 10 - u)]; } },
+  { k: 'x2', n: '2-digit × 2-digit', hint: 'Addition method: 23 × 41 → 23 × 40 = 920, + 23 = 943. Or criss-cross: tens×tens, the two cross products, ones×ones.', g: () => { const a = ri(12, 99), b = ri(12, 99); return [a + ' × ' + b, a * b]; } },
+  { k: 'tables', n: 'Tables up to 20 × 20', hint: 'For numbers in the teens: add the ones digit of one to the other number, attach a zero, add the product of the ones: 14 × 17 → (17 + 4) = 21 → 210, + 4 × 7 = 238.', g: () => { const a = ri(11, 20), b = ri(3, 20); return [a + ' × ' + b, a * b]; } },
+  { k: 'div1', n: 'Divide by a 1-digit number', hint: 'Left to right, like short division, saying each digit of the answer as you get it. Answers here are whole numbers.', g: () => { const b = ri(3, 9), q = ri(12, 199); return [(b * q) + ' ÷ ' + b, q]; } },
+  { k: 'pct', n: 'Percentages', hint: 'Find 10% (move the decimal point) and 1%, then build: 15% = 10% + half of it. Or swap: 8% of 50 = 50% of 8.', g: () => { const p = pick([5, 10, 15, 20, 25, 30, 40, 50, 60, 75]), b = pick([20, 40, 60, 80, 120, 140, 160, 200, 240, 280, 320, 360, 400, 480, 600, 800]); return [p + '% of ' + b, p * b / 100]; } },
+  { k: 'dow', n: 'Day of the week', type: 'dow', hint: 'Add the day of the month, a month code, and a year code; take the remainder after dividing by 7. See the Calendar lesson in Mental Math for the codes.', g: () => { const d = new Date(ri(1950, 2049), rnd(12), ri(1, 28)); return [d.getDate() + ' ' + d.toLocaleString('en', { month: 'long' }) + ' ' + d.getFullYear(), d.getDay()]; } }
+];
+drill({
+  id: 'math', name: 'Mental Math Sprint', track: 'math', unit: 'correct', icon: '×',
+  desc: 'Sixty seconds, one technique at a time. No paper. Say the running total in your head as you work left to right.',
+  how: 'Each skill keeps its own score. Learn the technique in the Mental Math lessons first, then sprint here until it is automatic.',
+  run(w, o) {
+    const self = this; let cat = o.cat || S.notes.mathCat || 'add2', secs = 60;
+    const start = () => {
+      const C = MATH.find(m => m.k === cat); S.notes.mathCat = cat; save(); clear(w); let left = secs, ok = 0, total = 0, cur, buf = ''; const id = 'math:' + cat;
+      const tm = el('span', { class: 'timer' }, fmtT(left)); const sc = el('span', { class: 'pill' }, '0 correct'); const q = el('div', { class: 'big' }); const a = el('div', { class: 'big', style: 'min-height:1.2em;color:var(--teal)' }); const fb = el('p', { class: 'small', style: 'min-height:3em;text-align:center' });
+      const next = () => { cur = C.g(); q.textContent = cur[0]; buf = ''; a.textContent = C.type === 'dow' ? '' : '?'; };
+      const submit = v => { total++; if (v === cur[1]) { ok++; fb.innerHTML = '<span class="ok">Correct</span>'; } else { fb.innerHTML = '<span class="no">' + esc(cur[0]) + ' = ' + (C.type === 'dow' ? DOW[cur[1]] : cur[1]) + '</span><br>' + esc(C.hint); } sc.textContent = ok + ' correct'; next(); };
+      const press = k => { if (k === '⌫') buf = buf.slice(0, -1); else if (k === 'OK') { if (buf !== '') submit(+buf); return; } else if (buf.length < 8) buf += k; a.textContent = buf || '?'; };
+      const pad = C.type === 'dow' ? el('div', { class: 'grid' }, DOW.map((d, i) => el('button', { class: 'btn', onclick: () => submit(i) }, d))) : el('div', { class: 'keypad' }, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'].map(k => el('button', { class: k === 'OK' ? 'go' : '', onclick: () => press(k), 'aria-label': k === '⌫' ? 'Delete' : k }, k)));
+      const kb = e => { if (C.type === 'dow') return; if (/^[0-9]$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('⌫'); else if (e.key === 'Enter') press('OK'); else if (e.key === '.') press('.'); };
+      document.addEventListener('keydown', kb); onLeave(() => document.removeEventListener('keydown', kb));
+      w.append(el('div', { class: 'row between' }, tm, sc), el('div', { class: 'stage' }, el('div', null, q, a)), fb, pad); next();
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) { stop(); document.removeEventListener('keydown', kb); logScore(id, ok, C.n); clear(w); w.append(resultCard(self, id, ok, ok + ' correct of ' + total + ' in ' + secs + ' s', el('div', { class: 'callout' }, el('b', null, 'Technique: '), C.hint), start)); } });
+    };
+    w.append(el('div', { class: 'card' }, el('h2', null, this.name), el('p', null, this.desc), el('p', { class: 'muted small' }, this.how),
+      el('div', { class: 'list' }, MATH.map(m => { const b = bestFor('math:' + m.k); return el('button', { class: 'item', onclick: () => { cat = m.k; start(); } }, el('span', { class: 't' }, el('b', null, m.n), el('div', { class: 'muted small' }, m.hint.split(':')[0] + '.')), b != null ? el('span', { class: 'pill done' }, 'best ' + b) : el('span', { class: 'pill' }, 'new')); }))));
+  }
+});
+
+/* ---- 13. Focus Session ---- */
+drill({
+  id: 'focus', name: 'Focus Session', track: 'learning', unit: 'min', icon: '25',
+  desc: 'A timed study block built on active recall: set a question before you start, study without distraction, then write what you remember and how you would teach it.',
+  how: 'Twenty-five minutes on, five off, is the classic Pomodoro rhythm. Phone out of reach. Jot stray thoughts on paper instead of following them.',
+  run(w) {
+    let mins = 25; const goal = el('input', { type: 'text', id: 'fs-goal', placeholder: 'What question should this session answer?' });
+    const start = () => {
+      const g = goal.value.trim(); clear(w); let left = mins * 60; const tm = el('div', { class: 'big timer' }, fmtT(left));
+      w.append(el('div', { class: 'stage' }, el('div', null, el('p', { class: 'muted' }, g || 'Focus'), tm)), el('button', { class: 'btn', onclick: () => fin() }, 'Finish early'));
+      const stop = timerEvery(1000, () => { left--; tm.textContent = fmtT(left); if (left <= 0) fin(); });
+      const fin = () => {
+        stop(); const done = Math.max(1, Math.round((mins * 60 - left) / 60)); clear(w); const ta = el('textarea', { id: 'fs-dump', placeholder: 'Close the book. Write everything you can remember, in your own words.' }); const teach = el('input', { type: 'text', id: 'fs-teach', placeholder: 'One sentence a ten-year-old would understand' });
+        w.append(el('div', { class: 'card' }, el('h3', null, 'Recall before you rest'), el('label', { for: 'fs-dump' }, 'Brain dump', ta), el('label', { for: 'fs-teach' }, 'Teach it', teach), el('button', { class: 'btn primary', onclick: () => { logScore('focus', done, g); if (ta.value.trim()) { (S.notes.sessions = S.notes.sessions || []).unshift({ t: Date.now(), g, d: ta.value.trim(), s: teach.value.trim() }); S.notes.sessions = S.notes.sessions.slice(0, 30); save(); } clear(w); w.append(resultCard(this, 'focus', done, done + ' focused minutes', el('p', { class: 'muted small' }, 'Now take a real break: stand up, move, drink water, look at something far away.'), () => { clear(w); this.run(w); })); } }, 'Save session')));
+      };
+    };
+    w.append(el('div', { class: 'card' }, el('h2', null, this.name), el('p', null, this.desc), el('p', { class: 'muted small' }, this.how), el('label', { for: 'fs-goal' }, 'Session question', goal), el('div', { class: 'field-row' }, select('fs-m', 'Length', [[10, '10 min'], [15, '15 min'], [25, '25 min'], [40, '40 min'], [50, '50 min']], mins, v => mins = +v)), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: start }, 'Start'))));
+    const ss = S.notes.sessions || []; if (ss.length) w.append(el('div', { class: 'card' }, el('h3', null, 'Recent sessions'), ss.slice(0, 5).map(s => el('details', null, el('summary', null, new Date(s.t).toLocaleDateString() + ' · ' + (s.g || 'Session')), el('p', { class: 'small', style: 'white-space:pre-wrap' }, s.d), s.s ? el('p', { class: 'small muted' }, 'Taught as: ' + s.s) : null))));
+  }
+});
+
+/* ---- 14. Explain It Simply ---- */
+drill({
+  id: 'explain', name: 'Explain It Simply', track: 'learning', unit: 'explanations', icon: '5y',
+  desc: 'Pick an idea you are learning and explain it as if to a five-year-old. Wherever you reach for jargon or get stuck, you have found the gap.',
+  how: 'Then add one metaphor ("this is like…") and one concrete picture or sensation. This combines three of Scott Young\'s methods: the 5-year-old method, metaphor and visceralization.',
+  run(w) {
+    const f = (id, l, ph) => { const t = el('textarea', { id, placeholder: ph, style: 'min-height:80px' }); return [el('label', { for: id }, l, t), t]; };
+    const topic = el('input', { type: 'text', id: 'ex-topic', placeholder: 'e.g. compound interest, the Krebs cycle, a subnet mask' });
+    const [l1, t1] = f('ex-1', '1. Explain it in plain words', 'No technical terms. Short sentences.'); const [l2, t2] = f('ex-2', '2. It is like…', 'A metaphor from everyday life. Where does the comparison break down?'); const [l3, t3] = f('ex-3', '3. Picture or feel it', 'What would you see, hear or feel if this idea were a physical thing?'); const [l4, t4] = f('ex-4', '4. Where did you get stuck?', 'This is what to re-study.');
+    w.append(el('div', { class: 'card' }, el('h2', null, this.name), el('p', null, this.desc), el('p', { class: 'muted small' }, this.how), el('label', { for: 'ex-topic' }, 'Idea', topic), l1, l2, l3, l4,
+      el('button', { class: 'btn primary', onclick: () => { if (!topic.value.trim() || !t1.value.trim()) { topic.focus(); return; } (S.notes.explain = S.notes.explain || []).unshift({ t: Date.now(), topic: topic.value.trim(), a: t1.value, b: t2.value, c: t3.value, d: t4.value }); S.notes.explain = S.notes.explain.slice(0, 40); logScore('explain', (S.notes.explain || []).length, topic.value.trim()); clear(w); this.run(w); } }, 'Save explanation')));
+    const ex = S.notes.explain || []; if (ex.length) w.append(el('div', { class: 'card' }, el('h3', null, 'Saved explanations'), ex.slice(0, 10).map(s => el('details', null, el('summary', null, s.topic), el('p', { class: 'small', style: 'white-space:pre-wrap' }, s.a + (s.b ? '\n\nLike: ' + s.b : '') + (s.c ? '\n\nPicture: ' + s.c : '') + (s.d ? '\n\nStuck on: ' + s.d : ''))))));
+  }
+});
+
+'use strict';
+/* ================= VIEWS ================= */
+const TRACKS = [
+  { id: 'foundations', name: 'Learning Foundations', desc: 'Mindset, focus, state, sleep, habits and the rules every technique depends on.' },
+  { id: 'memory', name: 'Memory Techniques', desc: 'Images, chains, pegs, palaces, names, numbers, vocabulary, texts and speeches.' },
+  { id: 'learning', name: 'Study Methods', desc: 'Understanding deeply, taking notes, spaced repetition, practice and learning with AI.' },
+  { id: 'reading', name: 'Speed Reading', desc: 'Pacing, eye span, previewing and reading faster without losing comprehension.' },
+  { id: 'math', name: 'Mental Math', desc: 'Left-to-right arithmetic, shortcuts for multiplying, squaring and dividing, estimation, calendar.' }
+];
+const trackName = id => (TRACKS.find(t => t.id === id) || {}).name || id;
+const lessonById = id => LESSONS.find(l => l.id === id);
+const lessonsOf = t => LESSONS.filter(l => l.t === t);
+function nextLesson() { const id = PROGRAM.find(id => !S.done[id]); return id ? lessonById(id) : null; }
+function dueCards() { const now = Date.now(); return Object.keys(S.cards).filter(k => S.cards[k].due <= now); }
+function drillTitle(id) { const [b, c] = id.split(':'); const d = getDrill(b); if (!d) return id; if (b === 'math' && c) return (MATH.find(m => m.k === c) || {}).n || d.name; if (b === 'schulte' && c) return d.name + ' ' + c + '×' + c; return d.name; }
+function drillTile(d, opt) { const b = d.id === 'math' ? null : bestFor(d.id, d.higher !== false); return el('button', { class: 'tile', onclick: () => openDrill(d.id, opt) }, el('span', { class: 'pill' }, d.icon), el('b', null, d.name), el('span', { class: 'small' }, b != null ? 'Best: ' + d.fmt(b) : d.desc.split('.')[0] + '.')); }
+function lessonRow(l, n) { return el('button', { class: 'item', onclick: () => openLesson(l.id) }, el('span', { class: 'n' }, n), el('span', { class: 't' }, l.title, el('div', { class: 'muted small' }, trackName(l.t))), el('span', { class: 'check' + (S.done[l.id] ? ' on' : ''), 'aria-label': S.done[l.id] ? 'Completed' : 'Not completed' }, S.done[l.id] ? '✓' : '')); }
+
+function openLesson(id) {
+  const l = lessonById(id);
+  go(w => {
+    const d = l.drill ? getDrill(l.drill) : null;
+    w.append(el('div', { class: 'card lesson' },
+      el('div', { class: 'row between' }, el('span', { class: 'pill' }, trackName(l.t)), S.done[l.id] ? el('span', { class: 'pill done' }, 'Completed') : null),
+      el('h2', null, l.title),
+      el('p', null, l.why),
+      el('h3', null, 'How to do it'), el('ol', { class: 'steps' }, l.how.map(s => el('li', { html: s }))),
+      l.ex ? el('div', { class: 'callout' }, el('b', null, 'Example. '), el('span', { html: l.ex })) : null,
+      el('div', { class: 'callout hi' }, el('b', null, 'Practise now. '), l.do),
+      el('div', { class: 'row' }, d ? el('button', { class: 'btn teal', onclick: () => openDrill(l.drill, l.dopt) }, 'Open ' + d.name) : null,
+        el('button', { class: 'btn primary', onclick: () => { if (!S.done[l.id]) { S.done[l.id] = Date.now(); if (l.q) S.cards['L:' + l.id] = { q: l.q, a: l.a, ef: 2.5, iv: 0, n: 0, due: Date.now() + 20 * 3600 * 1000 }; touchDay(); save(); } back(); } }, S.done[l.id] ? 'Back' : 'Mark complete')),
+      el('p', { class: 'muted small' }, 'Drawn from: ' + l.src.map(s => (SOURCES.find(x => x.id === s) || { short: s }).short).join(' · '))));
+    if (l.q) w.append(el('details', { class: 'card' }, el('summary', null, 'Check yourself: ' + l.q), el('p', null, l.a)));
+  }, l.title);
+}
+
+const VIEWS = {
+  today(w) {
+    const nl = nextLesson(), due = dueCards().length, st = streak(), doneN = Object.keys(S.done).length;
+    w.append(el('div', null, el('p', { class: 'muted small' }, new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })), el('h2', null, st > 1 ? st + ' days in a row. Keep the chain going.' : doneN ? 'Welcome back. Fifteen minutes is enough.' : 'Learn faster. Remember more. Think sharper.')));
+    if (!storageOK) w.append(el('div', { class: 'callout' }, 'This browser is not letting the app save progress. You can still train; use More → Settings to copy a backup.'));
+    w.append(el('div', { class: 'stats' }, el('div', { class: 'card stat' }, el('b', null, doneN + '/' + LESSONS.length), el('span', { class: 'muted small' }, 'lessons')), el('div', { class: 'card stat' }, el('b', null, S.log.length), el('span', { class: 'muted small' }, 'drill sessions')), el('div', { class: 'card stat' }, el('b', null, st), el('span', { class: 'muted small' }, 'day streak')), el('div', { class: 'card stat' }, el('b', null, due), el('span', { class: 'muted small' }, 'cards due'))));
+    if (nl) { const idx = PROGRAM.indexOf(nl.id); w.append(el('div', { class: 'card next' }, el('div', { class: 'row between' }, el('span', { class: 'pill hi' }, '1 · Next lesson'), el('span', { class: 'muted small' }, S.prog.on ? 'Week ' + (Math.floor(idx / 6) + 1) + ', day ' + (idx % 6 + 1) : trackName(nl.t))), el('h3', null, nl.title), el('p', { class: 'muted' }, nl.why.split('. ')[0] + '.'), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: () => openLesson(nl.id) }, 'Open lesson')))); }
+    else w.append(el('div', { class: 'card next' }, el('h3', null, 'All ' + LESSONS.length + ' lessons complete'), el('p', null, 'From here it is drills and reviews. Raise the settings: longer lists, less time, bigger tables.')));
+    // drills for today: lesson drill + least recently practised others
+    const last = id => { const a = S.log.filter(l => l.d.split(':')[0] === id); return a.length ? a[a.length - 1].t : 0; };
+    let picks = []; if (nl && nl.drill) picks.push(getDrill(nl.drill)); DRILLS.slice().sort((a, b) => last(a.id) - last(b.id)).forEach(d => { if (picks.length < 3 && !picks.includes(d)) picks.push(d); });
+    w.append(el('div', { class: 'card' }, el('span', { class: 'pill' }, '2 · Train'), el('div', { class: 'grid' }, picks.map(d => drillTile(d, nl && nl.drill === d.id ? nl.dopt : null)))));
+    w.append(el('div', { class: 'card' }, el('span', { class: 'pill' }, '3 · Review'), el('p', null, due ? due + ' flashcard' + (due > 1 ? 's are' : ' is') + ' due. Reviewing just before you would forget is what moves a fact into long-term memory.' : 'Nothing due. Each lesson you complete adds a review card that comes back at growing intervals.'), el('div', { class: 'row' }, el('button', { class: 'btn' + (due ? ' primary' : ''), onclick: () => tab('review') }, due ? 'Review now' : 'Open review'))));
+    if (!S.prog.on) w.append(el('div', { class: 'card' }, el('h3', null, 'Optional: the 12-week program'), el('p', { class: 'muted' }, 'Six short sessions a week take you through all five sections in a set order. Without it, the app simply suggests the next lesson.'), el('div', { class: 'row' }, el('button', { class: 'btn', onclick: () => go(programView, '12-week program') }, 'See the program'))));
+  },
+  learn(w) {
+    w.append(el('h2', null, 'Learn'), el('p', { class: 'muted' }, LESSONS.length + ' short lessons. Each one teaches a single technique and ends with something to do.'));
+    w.append(el('div', { class: 'grid two' }, TRACKS.map(t => { const ls = lessonsOf(t.id), dn = ls.filter(l => S.done[l.id]).length; return el('button', { class: 'tile', onclick: () => go(v => { v.append(el('h2', null, t.name), el('p', { class: 'muted' }, t.desc), el('div', { class: 'card' }, el('div', { class: 'list' }, ls.map((l, i) => lessonRow(l, i + 1))))); }, t.name) }, el('b', null, t.name), el('span', { class: 'small' }, t.desc), progressBar(dn / ls.length), el('span', { class: 'small' }, dn + ' of ' + ls.length + ' done')); })));
+  },
+  train(w) {
+    w.append(el('h2', null, 'Train'), el('p', { class: 'muted' }, 'Techniques only work once they are fast. Every drill keeps your scores so you can watch them climb.'));
+    [['memory', 'Memory'], ['reading', 'Reading and focus'], ['math', 'Mental math'], ['learning', 'Study tools']].forEach(([t, n]) => w.append(el('div', { class: 'card' }, el('h3', null, n), el('div', { class: 'grid' }, DRILLS.filter(d => d.track === t).map(d => drillTile(d))))));
+  },
+  review(w) {
+    const due = dueCards(), all = Object.keys(S.cards);
+    w.append(el('h2', null, 'Review'), el('p', { class: 'muted' }, 'Spaced repetition: each card returns after a longer gap when you know it and comes straight back when you do not.'));
+    w.append(el('div', { class: 'card next' }, el('div', { class: 'stat' }, el('b', null, due.length), el('span', { class: 'muted small' }, 'due now, of ' + all.length + ' cards')), el('div', { class: 'row' }, el('button', { class: 'btn primary', disabled: !due.length, onclick: () => go(reviewSession, 'Review session') }, 'Start review'))));
+    const addDeck = (name, prefix, cards) => { const have = cards.every((c, i) => S.cards[prefix + i]); return el('div', { class: 'item', style: 'cursor:default' }, el('span', { class: 't' }, el('b', null, name), el('div', { class: 'muted small' }, cards.length + ' cards')), have ? el('span', { class: 'pill done' }, 'Added') : el('button', { class: 'btn sm', onclick: () => { cards.forEach((c, i) => { if (!S.cards[prefix + i]) S.cards[prefix + i] = { q: c[0], a: c[1], ef: 2.5, iv: 0, n: 0, due: Date.now() }; }); save(); render(); } }, 'Add deck')); };
+    const map = codeMap(), sys = S.set.code === 'gms' ? 'GMS code' : 'Major system';
+    w.append(el('div', { class: 'card' }, el('h3', null, 'Ready-made decks'), el('div', { class: 'list' },
+      addDeck(sys + ': digit sounds', 'D:' + S.set.code + ':', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => [sys + ': what sounds stand for ' + d + '?', map[d]])),
+      addDeck('Sun list pegs', 'D:sun:', PEGLISTS.sun.items.map((x, i) => ['Sun list: number ' + (i + 1) + '?', x])),
+      addDeck('Body list pegs', 'D:body:', PEGLISTS.body.items.map((x, i) => ['Body list: number ' + (i + 1) + '?', x])),
+      S.set.code === 'major' ? addDeck('Major system images 00–99', 'D:mp:', MAJOR_PEGS.map((x, i) => ['Image for ' + String(i).padStart(2, '0') + '?', pegFor(i)])) : null)));
+    const q = el('input', { type: 'text', id: 'nc-q', placeholder: 'Question or cue' }), a = el('input', { type: 'text', id: 'nc-a', placeholder: 'Answer' });
+    w.append(el('div', { class: 'card' }, el('h3', null, 'Add your own card'), el('p', { class: 'muted small' }, 'One fact per card. Ask a question that has a single short answer, in your own words.'), el('label', { for: 'nc-q' }, 'Front', q), el('label', { for: 'nc-a' }, 'Back', a), el('div', { class: 'row' }, el('button', { class: 'btn', onclick: () => { if (!q.value.trim() || !a.value.trim()) { q.focus(); return; } S.cards['C:' + Date.now()] = { q: q.value.trim(), a: a.value.trim(), ef: 2.5, iv: 0, n: 0, due: Date.now() }; save(); render(); } }, 'Add card'))));
+    const mine = all.filter(k => k.startsWith('C:')); if (mine.length) w.append(el('div', { class: 'card' }, el('h3', null, 'Your cards'), el('div', { class: 'list' }, mine.map(k => el('div', { class: 'item', style: 'cursor:default' }, el('span', { class: 't' }, S.cards[k].q, el('div', { class: 'muted small' }, S.cards[k].a)), el('button', { class: 'btn sm', onclick: () => { delete S.cards[k]; save(); render(); } }, 'Delete'))))));
+  },
+  more(w) {
+    w.append(el('h2', null, 'More'));
+    w.append(el('div', { class: 'grid two' },
+      el('button', { class: 'tile', onclick: () => go(progressView, 'Progress') }, el('b', null, 'Progress'), el('span', { class: 'small' }, 'Scores, personal bests and trends for every drill.')),
+      el('button', { class: 'tile', onclick: () => go(programView, '12-week program') }, el('b', null, '12-week program'), el('span', { class: 'small' }, S.prog.on ? 'On. See the week-by-week plan.' : 'Optional add-on: a set order through all 72 lessons.')),
+      el('button', { class: 'tile', onclick: () => go(sourcesView, 'Sources') }, el('b', null, 'Sources and credits'), el('span', { class: 'small' }, 'The authors and works these lessons are drawn from.')),
+      el('button', { class: 'tile', onclick: () => go(settingsView, 'Settings') }, el('b', null, 'Settings and backup'), el('span', { class: 'small' }, 'Number code, theme, copy or restore your progress.'))));
+    w.append(el('div', { class: 'card' }, el('h3', null, 'About this app'), el('p', null, 'Mind Mastery was created with the help of AI (Claude, by Anthropic). The lessons are original summaries written from the courses and books listed under Sources; the techniques belong to their authors, who are credited there. For the full teaching, go to the original works.')));
+  }
+};
+
+function reviewSession(w) {
+  const queue = shuffle(dueCards()); let i = 0, n = 0;
+  const show = () => {
+    w.innerHTML = ''; if (i >= queue.length) { if (n) { touchDay(); save(); } w.append(el('div', { class: 'card next' }, el('h3', null, n + ' card' + (n === 1 ? '' : 's') + ' reviewed'), el('p', { class: 'muted' }, 'Cards you missed will come back today; the rest return when they are due.'), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: back }, 'Done')))); return; }
+    const k = queue[i], c = S.cards[k]; const ansBox = el('div', { class: 'flip card', style: 'display:none' }, c.a); const btns = el('div', { class: 'row' });
+    const grade = g => { n++; if (g === 0) { c.n = 0; c.iv = 0; c.ef = Math.max(1.3, c.ef - .2); c.due = Date.now(); queue.push(k); } else { c.iv = c.n === 0 ? (g === 3 ? 3 : 1) : c.n === 1 ? (g === 3 ? 6 : 3) : Math.round(c.iv * (g === 1 ? 1.2 : c.ef) * (g === 3 ? 1.3 : 1)); c.ef = Math.max(1.3, c.ef + (g === 1 ? -.15 : g === 3 ? .15 : 0)); c.n++; c.due = Date.now() + c.iv * 864e5; } save(); i++; show(); };
+    btns.append(el('button', { class: 'btn primary', onclick: () => { ansBox.style.display = 'grid'; btns.innerHTML = ''; btns.append(el('button', { class: 'btn', onclick: () => grade(0) }, 'Missed it'), el('button', { class: 'btn', onclick: () => grade(1) }, 'Hard'), el('button', { class: 'btn teal', onclick: () => grade(2) }, 'Good'), el('button', { class: 'btn', onclick: () => grade(3) }, 'Easy')); } }, 'Show answer'));
+    w.append(el('p', { class: 'muted small' }, (i + 1) + ' of ' + queue.length), el('div', { class: 'flip card' }, el('b', null, c.q)), ansBox, btns);
+  };
+  show();
+}
+
+function progressView(w) {
+  w.append(el('h2', null, 'Progress'));
+  const ids = [...new Set(S.log.map(l => l.d))];
+  w.append(el('div', { class: 'stats' }, el('div', { class: 'card stat' }, el('b', null, Object.keys(S.done).length), el('span', { class: 'muted small' }, 'lessons done')), el('div', { class: 'card stat' }, el('b', null, S.log.length), el('span', { class: 'muted small' }, 'drill sessions')), el('div', { class: 'card stat' }, el('b', null, Object.keys(S.days).length), el('span', { class: 'muted small' }, 'active days')), el('div', { class: 'card stat' }, el('b', null, streak()), el('span', { class: 'muted small' }, 'day streak'))));
+  w.append(el('div', { class: 'card' }, el('h3', null, 'Sections'), TRACKS.map(t => { const ls = lessonsOf(t.id), dn = ls.filter(l => S.done[l.id]).length; return el('div', null, el('div', { class: 'row between small' }, el('span', null, t.name), el('span', { class: 'muted' }, dn + '/' + ls.length)), progressBar(dn / ls.length)); })));
+  if (!ids.length) { w.append(el('div', { class: 'card' }, el('p', null, 'No drill scores yet. Your first session in each drill becomes your baseline, and every later session is compared with it.'), el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: () => tab('train') }, 'Go to Train')))); return; }
+  ids.forEach(id => { const d = getDrill(id); if (!d) return; const a = scoresFor(id), v = a.map(l => l.s), hi = d.higher !== false; const best = hi ? Math.max(...v) : Math.min(...v);
+    w.append(el('div', { class: 'card' }, el('div', { class: 'row between' }, el('h3', null, drillTitle(id)), el('span', { class: 'pill' }, a.length + ' session' + (a.length > 1 ? 's' : ''))), el('div', { class: 'row' }, el('div', { class: 'stat' }, el('b', null, d.fmt(best)), el('span', { class: 'muted small' }, 'best')), el('div', { class: 'stat' }, el('b', null, d.fmt(v[v.length - 1])), el('span', { class: 'muted small' }, 'latest')), el('div', { class: 'stat' }, el('b', null, d.fmt(v[0])), el('span', { class: 'muted small' }, 'first'))), spark(v.slice(-30)), el('p', { class: 'muted small' }, 'Latest: ' + a[a.length - 1].x + ' · ' + new Date(a[a.length - 1].t).toLocaleDateString()))); });
+}
+
+function programView(w) {
+  const weeks = []; for (let i = 0; i < PROGRAM.length; i += 6) weeks.push(PROGRAM.slice(i, i + 6));
+  const nl = nextLesson();
+  w.append(el('h2', null, 'The 12-week program'), el('p', { class: 'muted' }, 'An optional add-on. Six sessions a week of about 20–30 minutes: one lesson, its drill, and your reviews. Take the seventh day off or use it to repeat your weakest drill.'));
+  w.append(el('div', { class: 'card' }, el('div', { class: 'row between' }, el('b', null, S.prog.on ? 'Program is on' : 'Program is off'), el('button', { class: 'btn ' + (S.prog.on ? '' : 'primary'), onclick: () => { S.prog.on = !S.prog.on; if (S.prog.on && !S.prog.start) S.prog.start = Date.now(); save(); render(); } }, S.prog.on ? 'Turn off' : 'Start the program')), el('p', { class: 'muted small' }, 'Turning it off keeps all your progress. The lessons and drills work the same either way.')));
+  weeks.forEach((wk, wi) => { const dn = wk.filter(id => S.done[id]).length; const themes = WEEK_THEMES[wi] || '';
+    const det = el('details', { class: 'card' }, el('summary', null, 'Week ' + (wi + 1) + ' · ' + themes + '  (' + dn + '/' + wk.length + ')'), el('div', { class: 'list' }, wk.map((id, i) => lessonRow(lessonById(id), i + 1))));
+    if (nl && wk.includes(nl.id)) det.open = true; w.append(det); });
+}
+
+function sourcesView(w) {
+  w.append(el('h2', null, 'Sources and credits'), el('p', { class: 'muted' }, 'Every lesson names the works it draws on. The techniques are the authors\' own; this app only summarises them and turns them into practice. If a method helps you, the original course or book teaches it in far more depth.'));
+  const groups = [...new Set(SOURCES.map(s => s.g))];
+  groups.forEach(g => w.append(el('div', { class: 'card' }, el('h3', null, g), SOURCES.filter(s => s.g === g).map(s => el('div', { class: 'src' }, el('b', null, s.title), /not named/.test(s.by) ? null : el('span', null, s.by))))));
+  w.append(el('div', { class: 'card' }, el('h3', null, 'How this app was made'), el('p', null, 'Mind Mastery was created with the help of AI (Claude, by Anthropic), working from the owner\'s personal library of the works above. Lesson text is newly written; no course material is reproduced.')));
+}
+
+function settingsView(w) {
+  w.append(el('h2', null, 'Settings and backup'));
+  w.append(el('div', { class: 'card' }, el('div', { class: 'field-row' },
+    select('st-code', 'Number code', [['major', 'Major system (Kwik, memory sport)'], ['gms', 'GMS code (School of Phenomenal Memory)']], S.set.code, v => { S.set.code = v; save(); }),
+    select('st-theme', 'Appearance', [['dark', 'Black'], ['light', 'Light']], S.set.theme === 'light' ? 'light' : 'dark', v => { S.set.theme = v; save(); applyTheme(); })),
+    el('p', { class: 'muted small' }, 'Pick one number code and stay with it. Mixing two codes slows both.')));
+  const out = el('textarea', { id: 'bk-out', readonly: true }); const inp = el('textarea', { id: 'bk-in', placeholder: 'Paste a backup here' }); const msg = el('p', { class: 'small' });
+  w.append(el('div', { class: 'card' }, el('h3', null, 'Backup'), el('p', { class: 'muted small' }, 'Progress is saved in this browser on this device. To move it to another device, or to keep a safe copy, copy the backup text and paste it into the app there.'),
+    el('div', { class: 'row' }, el('button', { class: 'btn', onclick: () => { out.value = JSON.stringify(S); out.select(); try { navigator.clipboard.writeText(out.value).then(() => msg.textContent = 'Backup copied to the clipboard.', () => msg.textContent = 'Select the text below and copy it.'); } catch (e) { msg.textContent = 'Select the text below and copy it.'; } } }, 'Create and copy backup')), el('label', { for: 'bk-out' }, 'Backup text', out),
+    el('label', { for: 'bk-in' }, 'Restore', inp), el('div', { class: 'row' }, el('button', { class: 'btn', onclick: () => { try { const o = JSON.parse(inp.value); if (!o || typeof o !== 'object' || !o.done || !o.log) throw 0; S = Object.assign(defState(), o); save(); applyTheme(); msg.textContent = 'Backup restored.'; } catch (e) { msg.textContent = 'That text is not a Mind Mastery backup. Paste the whole backup, starting with { and ending with }.'; } } }, 'Restore from pasted backup')), msg));
+  if (window.STANDALONE) {
+    const fi = el('input', { type: 'file', id: 'bk-file', accept: '.json,application/json' }); const fmsg = el('p', { class: 'small' });
+    fi.addEventListener('change', () => { const f = fi.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const o = JSON.parse(r.result); if (!o || typeof o !== 'object' || !o.done || !o.log) throw 0; S = Object.assign(defState(), o); save(); applyTheme(); fmsg.textContent = 'Backup restored.'; } catch (e) { fmsg.textContent = 'That file is not a Mind Mastery backup.'; } }; r.readAsText(f); });
+    w.append(el('div', { class: 'card' }, el('h3', null, 'Backup file'), el('p', { class: 'muted small' }, 'Save a backup file every week or two. Uninstalling the app or clearing its data erases your progress.'),
+      el('div', { class: 'row' }, el('button', { class: 'btn primary', onclick: () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' })); a.download = 'mind-mastery-backup-' + today() + '.json'; document.body.append(a); a.click(); a.remove(); fmsg.textContent = 'Backup file downloaded.'; } }, 'Download backup file')),
+      el('label', { for: 'bk-file' }, 'Import backup file', fi), fmsg));
+  }
+  let armed = false; const rb = el('button', { class: 'btn', onclick: () => { if (!armed) { armed = true; rb.textContent = 'Tap again to erase everything'; return; } S = defState(); save(); applyTheme(); tab('today'); } }, 'Reset all progress');
+  w.append(el('div', { class: 'card' }, el('h3', null, 'Start over'), el('p', { class: 'muted small' }, 'Erases lessons done, scores, cards, routes and notes on this device.'), el('div', { class: 'row' }, rb)));
+}
+
+/* ---------- boot ---------- */
+function boot() {
+  applyTheme();
+  const nav = $('nav.tabs'); TABS.forEach(([id, name, icon]) => nav.append(el('button', { 'data-tab': id, onclick: () => tab(id), html: `<svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg><span>${name}</span>` })));
+  $('#back').addEventListener('click', back);
+  const fromHash = () => { const h = (location.hash || '').replace('#', ''); return VIEWS[h] ? h : 'today'; };
+  window.addEventListener('hashchange', () => { const h = fromHash(); if (h !== curTab || stack.length > 1) tab(h, true); });
+  tab(fromHash(), true);
+}
+
+boot();
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+</script>
+</body>
+</html>
